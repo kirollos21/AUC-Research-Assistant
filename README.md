@@ -171,7 +171,10 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Team
 
-- [Team member information will be added]
+- Kirollos Zikry
+- Alyaman Massarani
+- Adham Ali
+- Eslam Mohamed Tawfik
 
 ## Support
 
