@@ -3,7 +3,8 @@ Application configuration management
 """
 
 from typing import List, Optional
-from pydantic import BaseSettings, validator
+from pydantic_settings import BaseSettings
+from pydantic import field_validator
 import os
 from functools import lru_cache
 
@@ -56,19 +57,22 @@ class Settings(BaseSettings):
     CORS_METHODS: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     CORS_HEADERS: List[str] = ["*"]
     
-    @validator("CORS_ORIGINS", pre=True)
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
     def assemble_cors_origins(cls, v):
         if isinstance(v, str):
             return [i.strip() for i in v.split(",")]
         return v
     
-    @validator("CORS_METHODS", pre=True)
+    @field_validator("CORS_METHODS", mode="before")
+    @classmethod
     def assemble_cors_methods(cls, v):
         if isinstance(v, str):
             return [i.strip() for i in v.split(",")]
         return v
     
-    @validator("ALLOWED_EXTENSIONS", pre=True)
+    @field_validator("ALLOWED_EXTENSIONS", mode="before")
+    @classmethod
     def assemble_allowed_extensions(cls, v):
         if isinstance(v, str):
             return [i.strip() for i in v.split(",")]
