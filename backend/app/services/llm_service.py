@@ -8,6 +8,7 @@ from typing import List, Dict, Any, Optional
 from datetime import datetime
 import openai
 from sentence_transformers import SentenceTransformer
+import google.generativeai as genai
 import numpy as np
 from sklearn.metrics.pairwise import cosine_similarity
 
@@ -24,6 +25,7 @@ class LLMService:
     def __init__(self):
         self.openai_client = None
         self.embedding_model = None
+        self.API_key = "AIzaSyCYh4ZfYLhhPy_TrLFuid8Qz5QRXrayX64"  # THis is Tawfik's Gemini API key
         self._initialize_models()
     
     def _initialize_models(self):
@@ -74,9 +76,9 @@ class LLMService:
             return QueryExpansion(
                 original_query=query,
                 expanded_queries=[query],
-                synonyms=[],
-                related_terms=[],
-                semantic_variants=[]
+                synonyms=["Exception generating synonyms"],
+                related_terms=["Exception generating related terms"],
+                semantic_variants=["Exception"]
             )
     
     async def _generate_synonyms(self, query: str) -> List[str]:
@@ -102,42 +104,78 @@ class LLMService:
         
         return synonyms[:5]  # Limit to top 5 synonyms
     
-    async def _generate_related_terms(self, query: str, context: Optional[str] = None) -> List[str]:
-        """Generate related academic terms"""
-        if not self.openai_client:
-            return []
+
+    # async def _generate_related_terms(self, query: str, context: Optional[str] = None) -> List[str]:
+    #     """Generate related academic terms"""
+    #     if not self.openai_client:
+    #         return []
         
-        try:
-            prompt = f"""
-            Given the academic search query: "{query}"
-            {f"Context: {context}" if context else ""}
+    #     try:
+    #         prompt = f"""
+    #         Given the academic search query: "{query}"
+    #         {f"Context: {context}" if context else ""}
             
-            Generate 3-5 related academic terms or phrases that would help find relevant research papers.
-            Focus on:
-            - Technical terminology
-            - Related research areas
-            - Methodological approaches
-            - Key concepts
+    #         Generate 3-5 related academic terms or phrases that would help find relevant research papers.
+    #         Focus on:
+    #         - Technical terminology
+    #         - Related research areas
+    #         - Methodological approaches
+    #         - Key concepts
             
-            Return only the terms, one per line, without explanations.
-            """
+    #         Return only the terms, one per line, without explanations.
+    #         """
             
-            response = await self._call_openai(prompt, max_tokens=100)
-            if response:
-                terms = [term.strip() for term in response.split('\n') if term.strip()]
-                return terms[:5]
+    #         response = await self._call_openai(prompt, max_tokens=100)
+    #         if response:
+    #             terms = [term.strip() for term in response.split('\n') if term.strip()]
+    #             return terms[:5]
             
-        except Exception as e:
-            logger.error(f"Error generating related terms: {e}")
+    #     except Exception as e:
+    #         logger.error(f"Error generating related terms: {e}")
         
-        return []
+    #     return []
     
+    # async def _generate_semantic_variants(self, query: str) -> List[str]:
+    #     """Generate semantic variants of the query"""
+    #     if not self.openai_client:
+    #         return []
+        
+    #     try:
+    #         prompt = f"""
+    #         Rephrase this academic search query in 3 different ways while maintaining the same meaning:
+    #         "{query}"
+            
+    #         Focus on:
+    #         - Different word choices
+    #         - Alternative phrasings
+    #         - Academic language variations
+            
+    #         Return only the rephrased queries, one per line.
+    #         """
+            
+    #         response = await self._call_openai(prompt, max_tokens=150)
+    #         if response:
+    #             variants = [variant.strip() for variant in response.split('\n') if variant.strip()]
+    #             return variants[:3]
+            
+    #     except Exception as e:
+    #         logger.error(f"Error generating semantic variants: {e}")
+        
+    #     return []
+    
+    ## We will not be using OpenAI for generating related terms & semantic variants, instead we will use Gemini API since it is FREE!!
     async def _generate_semantic_variants(self, query: str) -> List[str]:
-        """Generate semantic variants of the query"""
-        if not self.openai_client:
+        """Generate semantic variants of the query using Gemini API"""
+        if not hasattr(self, 'API_key') or not self.API_key:
             return []
         
         try:
+            # Configure Gemini API
+            genai.configure(api_key=self.API_key)
+            
+            # Initialize the model
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
             prompt = f"""
             Rephrase this academic search query in 3 different ways while maintaining the same meaning:
             "{query}"
@@ -150,13 +188,65 @@ class LLMService:
             Return only the rephrased queries, one per line.
             """
             
-            response = await self._call_openai(prompt, max_tokens=150)
-            if response:
-                variants = [variant.strip() for variant in response.split('\n') if variant.strip()]
-                return variants[:3]
+            # Generate response
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=150,
+                    temperature=0.7,
+                )
+            )
             
+            if response and response.text:
+                variants = [variant.strip() for variant in response.text.split('\n') if variant.strip()]
+                return variants[:3]
+                
         except Exception as e:
-            logger.error(f"Error generating semantic variants: {e}")
+            logger.error(f"Error generating semantic variants with Gemini: {e}")
+        
+        return []
+    
+    async def _generate_related_terms(self, query: str, context: Optional[str] = None) -> List[str]:
+        """Generate related academic terms using Gemini API"""
+        if not hasattr(self, 'API_key') or not self.API_key:
+            return []
+        
+        try:
+            # Configure Gemini API
+            genai.configure(api_key=self.API_key)
+            
+            # Initialize the model
+            model = genai.GenerativeModel('gemini-1.5-flash')
+            
+            prompt = f"""
+            Given the academic search query: "{query}"
+            {f"Context: {context}" if context else ""}
+            
+            Generate 3 related academic terms or phrases that would help find relevant research papers.
+            Focus on:
+            - Technical terminology
+            - Related research areas
+            - Methodological approaches
+            - Key concepts
+            
+            Return only the terms, one per line, without explanations.
+            """
+            
+            # Generate response
+            response = model.generate_content(
+                prompt,
+                generation_config=genai.types.GenerationConfig(
+                    max_output_tokens=100,
+                    temperature=0.7,
+                )
+            )
+            
+            if response and response.text:
+                terms = [term.strip() for term in response.text.split('\n') if term.strip()]
+                return terms[:5]
+                
+        except Exception as e:
+            logger.error(f"Error generating related terms with Gemini: {e}")
         
         return []
     
