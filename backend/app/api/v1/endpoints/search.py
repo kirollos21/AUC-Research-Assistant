@@ -14,6 +14,7 @@ from app.schemas.search import (
 )
 from app.services.federated_search_service import federated_search_service
 from app.services.llm_service import llm_service
+from app.services.database_connectors.arxiv_connector import ArxivConnector
 
 
 logger = logging.getLogger(__name__)
@@ -228,3 +229,27 @@ async def analyze_search_results(
     except Exception as e:
         logger.error(f"Analysis error: {e}")
         raise HTTPException(status_code=500, detail="Error analyzing results") 
+    
+
+@router.post("/search_arxiv")
+async def search_arxiv(s: str):
+    """    Search arXiv database for academic papers 
+    """
+    q = SearchQuery(
+        query=s,
+        max_results=10,
+        enable_semantic_search=False,
+        access_preferences=["open_access", "licensed", "any"])
+    
+    arxiv_connector = ArxivConnector()
+    search_query = SearchQuery(
+        query=q.query,
+        max_results=q.max_results,
+        enable_semantic_search=False  # or True if you want
+    )
+    results = await arxiv_connector.search(search_query)
+    
+    if not results:
+        raise HTTPException(status_code=404, detail="No results found")
+    else:
+        return [r.dict() if hasattr(r, "dict") else r for r in results]
