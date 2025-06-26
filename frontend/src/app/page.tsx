@@ -18,9 +18,30 @@ interface ResearchStep {
   status: "pending" | "active" | "completed";
 }
 
+interface Author {
+  name: string;
+  affiliation?: string | null;
+  orcid?: string | null;
+}
+
+// Define the paper type
+interface Paper {
+  id: string;
+  title: string;
+  abstract: string;
+  authors: Author[];
+  publication_date: string;
+  url?: string;
+  doi?: string;
+}
+
 export default function Home() {
   const [query, setQuery] = useState("");
-  const [messageBox, setMessageBox] = useState({
+  const [messageBox, setMessageBox] = useState<{
+    show: boolean;
+    type: string;
+    content: any[];
+  }>({
     show: false,
     type: "",
     content: [],
@@ -55,7 +76,7 @@ export default function Home() {
       setMessageBox({
         show: true,
         type: "search",
-        content: response.data.papers || response.data || [],
+        content: (response.data as Paper[]) || [],
       });
     } catch (err) {
       console.error("Search API error:", err);
@@ -193,40 +214,38 @@ export default function Home() {
                 </ul>
               ) : (
                 <div className="papers-list">
-                  {/* {messageBox.content.map((paper, index) => (
-                    <div key={index} className="paper-card">
-                      <h4 className="paper-title">{paper}</h4>
-                      <p className="paper-authors">
-                        {paper.authors} ({paper.year})
-                      </p>
-                      <p className="paper-abstract">{paper.abstract}</p>
-                      <div className="paper-meta">
-                        <span className="citations">
-                          Citations: {paper.citations || "N/A"}
-                        </span>
-                        {paper.doi && (
-                          <a
-                            href={`https://doi.org/${paper.doi}`}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="doi-link"
-                          >
-                            DOI: {paper.doi}
-                          </a>
-                        )}
-                        {paper.url && (
-                          <a
-                            href={paper.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="paper-link"
-                          >
-                            View Paper
-                          </a>
-                        )}
-                      </div>
-                    </div>
-                  ))} */}
+                  {Array.isArray(messageBox.content) &&
+                    messageBox.content.map((paper, index) => {
+                      const authors =
+                        paper.authors?.map((a: Author) => a.name).join(", ") ||
+                        "Unknown Authors";
+
+                      const year = paper.publication_date
+                        ? new Date(paper.publication_date).getFullYear()
+                        : "N/A";
+                      const abstractSnippet =
+                        paper.abstract?.slice(0, 150) + "...";
+
+                      return (
+                        <div key={index} className="paper-card">
+                          <h4 className="paper-title">{paper.title}</h4>
+                          <p className="paper-abstract">{abstractSnippet}</p>
+                          <p className="paper-authors">
+                            <strong>By:</strong> {authors} <span>({year})</span>
+                          </p>
+                          {paper.url && (
+                            <a
+                              href={paper.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="paper-link"
+                            >
+                              View Paper
+                            </a>
+                          )}
+                        </div>
+                      );
+                    })}
                 </div>
               )}
             </div>
