@@ -57,7 +57,7 @@ class LLMService:
             # Combine all expansions
             expanded_queries = list(set([
                 query,  # Original query
-                *synonyms,
+                # *synonyms,
                 *related_terms,
                 *semantic_variants
             ]))
