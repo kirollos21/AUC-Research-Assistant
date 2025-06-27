@@ -55,6 +55,16 @@ class Settings(BaseSettings):
     CORS_CREDENTIALS: bool = True
     CORS_METHODS: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     CORS_HEADERS: List[str] = ["*"]
+
+    EMBEDDING_MODE: str = "local"
+
+    # Settings for 'openai' embedding mode
+    # You can use a different key for embeddings if needed, otherwise OPENAI_API_KEY will be used
+    OPENAI_EMBEDDING_API_KEY: str = "your-openai-api-key"
+    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
+    # Optional: specify a different endpoint for OpenAI-compatible APIs
+    OPENAI_EMBEDDING_API_ENDPOINT: str = ""
+
     class Config:
         env_file = ".env"
         case_sensitive = True
