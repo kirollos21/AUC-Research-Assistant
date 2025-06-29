@@ -480,3 +480,36 @@ body {
     padding: 1.5rem;
   }
 }
+
+.papers-list {
+  padding: 16px;
+  background: #f9f9f9;
+}
+
+.paper-card {
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: white;
+}
+
+.paper-title {
+  font-weight: bold;
+  margin-bottom: 6px;
+}
+
+.paper-abstract {
+  font-style: italic;
+  margin-bottom: 6px;
+}
+
+.paper-authors {
+  color: #555;
+  margin-bottom: 6px;
+}
+
+.paper-link {
+  color: #007bff;
+  text-decoration: underline;
+}
