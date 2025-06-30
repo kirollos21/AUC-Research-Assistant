@@ -36,10 +36,22 @@ class Settings(BaseSettings):
     # AI/ML APIs
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_ORG_ID: Optional[str] = None
+    
+    # Mistral AI
+    MISTRAL_API_KEY: Optional[str] = None
+    MISTRAL_LLM_MODEL: str = "mistral-medium-latest"
+    MISTRAL_EMBEDDING_MODEL: str = "mistral-embed"
 
     # Vector Database
     VECTOR_DB_TYPE: str = "chromadb"
     CHROMA_PERSIST_DIRECTORY: str = "./data/chroma_db"
+    
+    # RAG Configuration
+    RAG_TOP_K: int = 5
+    RAG_DATABASE_CANDIDATES: int = 10
+    RAG_CHUNK_SIZE: int = 1000
+    RAG_CHUNK_OVERLAP: int = 200
+    RAG_MAX_DATABASE_QUERIES: int = 5
 
     # File Upload
     MAX_FILE_SIZE: int = 10485760  # 10MB
