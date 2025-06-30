@@ -1,22 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import HeroSection from "@/components/HeroSection";
-import ConversationalAssistant from "@/components/ConversationalAssistant";
-import ResearchWorkflow from "@/components/ResearchWorkflow";
-import ResultsDashboard from "@/components/ResultsDashboard";
-import Header from "@/components/Header";
-import Footer from "@/components/Footer";
-import { FederatedSearchResponse } from "@/types/search";
 import axios from "axios";
 import "./page.css";
-
-interface ResearchStep {
-  id: "prepare" | "relax" | "understand" | "keepup";
-  title: string;
-  description: string;
-  status: "pending" | "active" | "completed";
-}
 
 interface Author {
   name: string;
@@ -108,12 +94,6 @@ export default function Home() {
       setIsLoading(false);
     }
   };
-
-  interface MessageBoxState {
-    show: boolean;
-    type: string;
-    content: any[];
-  }
 
   const handleTestQuery = (testQuery: string): void => {
     setQuery(testQuery);
