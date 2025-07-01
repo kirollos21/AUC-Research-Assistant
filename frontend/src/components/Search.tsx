@@ -125,7 +125,7 @@ export default function Search() {
           </div>
         )}
 
-        {status && (
+        {isLoading && status && (
           <div className="status-message">
             <p>{status}</p>
           </div>
