@@ -17,6 +17,7 @@ from app.schemas.search import (
     SearchStats,
     DatabaseStatus,
 )
+from app.services.database_connectors.base import DatabaseConnector
 
 
 logger = logging.getLogger(__name__)
@@ -139,7 +140,7 @@ class FederatedSearchService:
             )
 
     async def _search_database_simple(
-        self, connector, query: SearchQuery
+        self, connector: DatabaseConnector, query: SearchQuery
     ) -> List[SearchResult]:
         """Search a single database without expansion"""
         try:

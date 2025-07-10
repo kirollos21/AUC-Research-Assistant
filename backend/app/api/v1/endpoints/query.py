@@ -14,6 +14,7 @@ from app.schemas.search import SearchQuery, SearchResult, FederatedSearchRespons
 from app.services.llm_client import get_llm_client
 from app.services.embedding_client import get_embedding_client
 from app.services.federated_search_service import FederatedSearchService
+from app.services.cohere_reranker import get_cohere_reranker
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(
@@ -139,6 +140,18 @@ async def process_research_query(request: QueryRequest):
         top_documents: List[Dict[str, Any]] = await embedding_client.similarity_search(
             query=request.query, k=top_k
         )
+        
+        # Step 4.5: Rerank documents using Cohere
+        # TODO: add getting top_n from api request data
+        top_n: int = settings.COHERE_TOP_N
+        reranker = get_cohere_reranker()
+        if reranker.is_available() and top_documents:
+            logger.info("Reranking documents with Cohere...")
+            top_documents = await reranker.rerank_documents(
+                query=request.query,
+                documents=top_documents,
+                top_n=top_n
+            )
 
         # Step 5: Generate LLM response with context
         logger.info("Generating LLM response...")
@@ -264,6 +277,17 @@ async def process_research_query_stream(request: QueryRequest):
             top_documents: List[Dict[str, Any]] = (
                 await embedding_client.similarity_search(query=request.query, k=top_k)
             )
+            
+            # Step 4.5: Rerank documents using Cohere
+            top_n: int = settings.COHERE_TOP_N
+            reranker = get_cohere_reranker()
+            if reranker.is_available() and top_documents:
+                yield f"data: {json.dumps({'type': 'status', 'message': 'Reranking documents with Cohere...'})}\n\n"
+                top_documents = await reranker.rerank_documents(
+                    query=request.query,
+                    documents=top_documents,
+                    top_n=top_n
+                )
 
             # Send top documents
             document_results: List[Dict[str, Any]] = [
@@ -335,6 +359,9 @@ async def health_check():
 
         # Test federated search
         search_service = FederatedSearchService()
+        
+        # Test Cohere reranker
+        reranker = get_cohere_reranker()
 
         return {
             "status": "healthy",
@@ -342,11 +369,14 @@ async def health_check():
                 "llm_client": "available",
                 "embedding_client": "available",
                 "search_service": "available",
+                "cohere_reranker": "available" if reranker.is_available() else "unavailable",
             },
             "config": {
                 "llm_model": settings.MISTRAL_LLM_MODEL,
                 "embedding_model": settings.MISTRAL_EMBEDDING_MODEL,
+                "cohere_rerank_model": settings.COHERE_RERANK_MODEL,
                 "top_k": settings.RAG_TOP_K,
+                "reranker_top_n": settings.COHERE_TOP_N,
                 "database_candidates": settings.RAG_DATABASE_CANDIDATES,
             },
         }
