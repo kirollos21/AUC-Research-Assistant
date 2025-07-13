@@ -105,15 +105,15 @@ venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install dependencies manually
+pip install fastapi uvicorn pydantic pydantic-settings arxiv httpx openai requests
 
 # Set up environment variables
 cp env.example .env
 # Edit .env with your configuration (see Environment Variables section)
 
 # Run the development server
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
+python main.py
 ```
 
 #### 3. Frontend Setup
