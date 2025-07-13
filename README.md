@@ -124,12 +124,6 @@ cd frontend
 # Install dependencies
 npm install
 
-# Set up environment variables
-# Create .env.local file with:
-NEXT_PUBLIC_API_BASE_URL=http://localhost:8000
-NEXT_PUBLIC_APP_NAME=AUC Research Assistant
-NEXT_PUBLIC_APP_VERSION=1.0.0
-
 # Run the development server
 npm run dev
 ```
@@ -420,41 +414,9 @@ docker-compose down -v
 docker-compose up -d
 ```
 
-## 📄 **License**
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
-
 ## 👥 **Team**
 
-- **Kirollos Zikry** - Backend Development & API Design
-- **Alyaman Massarani** - Frontend Development & UI/UX
-- **Adham Ali** - Database Design & DevOps
-- **Eslam Mohamed Tawfik** - AI/ML Integration & Testing
-
-## 📞 **Support**
-
-- **Issues**: [GitHub Issues](https://github.com/your-username/AUC-Research-Assistant/issues)
-- **Documentation**: [Project Wiki](https://github.com/your-username/AUC-Research-Assistant/wiki)
-- **Email**: support@auc-research-assistant.com
-
-## 🔄 **Changelog**
-
-### Version 1.0.0 (Current)
-- ✅ Complete backend API with FastAPI
-- ✅ Modern frontend with Next.js 15
-- ✅ ArXiv database integration
-- ✅ AI-powered search and analysis
-- ✅ Comprehensive testing suite
-- ✅ Docker deployment support
-- ✅ Production-ready architecture
-
-### Upcoming Features
-- 🔄 PubMed and CrossRef connectors
-- 🔄 Advanced analytics dashboard
-- 🔄 User authentication and profiles
-- 🔄 Collaborative research features
-- 🔄 Mobile application
-
----
-
-**Built with ❤️ by the AUC Research Assistant Team**
+- **Kirollos Zikry**
+- **Alyaman Massarani**
+- **Adham Ali**
+- **Eslam Mohamed Tawfik**
