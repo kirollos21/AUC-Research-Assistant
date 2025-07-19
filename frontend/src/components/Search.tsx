@@ -10,6 +10,7 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
 import { Search as SearchIcon, Loader2, ExternalLink, Star } from "lucide-react";
+import CitationPreview from '@/components/CitationPreview';
 
 interface Document {
   title: string;
@@ -28,10 +29,12 @@ export default function Search() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
+  const [citationStyle, setCitationStyle] = useState<"APA"|"MLA">("APA");
+  const MAX_DOCS = 10;
 
-  const API_BASE_URL = "http://localhost:8000/api/v1/query/stream";
+  const API_BASE_URL = "http://127.0.0.1:8000/api/v1/query/stream";
 
-  const handleSearch = async () => {
+  const handleSearch = async (options: any = {}) => {
     if (!query.trim()) return;
 
     setIsLoading(true);
@@ -41,58 +44,71 @@ export default function Search() {
     setStatus("");
 
     try {
-      const response = await fetch(API_BASE_URL, {
+      const payload = {
+        query: query.trim(),
+        max_results: 10,
+        top_k: 10,
+      };
+
+      const res = await fetch(API_BASE_URL, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: query.trim() }),
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
 
-      if (!response.body) return;
+      if (!res.body) {
+        throw new Error("No response body from backend");
+      }
 
-      const reader = response.body.getReader();
+      const reader = res.body.getReader();
       const decoder = new TextDecoder();
 
-      while (true) {
+      let doneReading = false;
+      while (!doneReading) {
         const { done, value } = await reader.read();
-        if (done) {
-          setIsLoading(false);
-          break;
-        }
+        if (done) break;
 
         const chunk = decoder.decode(value, { stream: true });
         const lines = chunk.split("\n\n");
 
         for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            const data = JSON.parse(line.substring(6));
-            switch (data.type) {
-              case "status":
-                setStatus(data.message);
-                break;
-              case "queries":
-                // Ignore
-                break;
-              case "documents":
-                setDocuments(data.documents);
-                break;
-              case "response_chunk":
-                setResponse((prev) => prev + data.chunk);
-                break;
-              case "complete":
-                setIsLoading(false);
-                break;
-              case "error":
-                setError(data.message);
-                setIsLoading(false);
-                break;
-            }
+          if (!line.startsWith("data: ")) continue;
+          const data = JSON.parse(line.substring(6));
+
+          switch (data.type) {
+            case "status":
+              setStatus(data.message);
+              break;
+
+            case "documents":
+              setDocuments(prev => [...prev, ...data.documents]);
+              break;
+
+            case "response_chunk":
+              setResponse(prev => prev + data.chunk);
+              break;
+
+            case "complete":
+              // stop showing "Generating response…"
+              setStatus("");
+              doneReading = true;
+              break;
+
+            case "error":
+              setStatus("");
+              setError(data.message);
+              doneReading = true;
+              break;
           }
+
+          if (doneReading) break;
         }
       }
-    } catch {
+    } catch (err) {
+      console.error(err);
       setError("An error occurred with the connection.");
+    } finally {
+      // always hide spinner
       setIsLoading(false);
     }
   };
@@ -100,7 +116,6 @@ export default function Search() {
   return (
     <div className="min-h-screen bg-background p-4">
       <div className="mx-auto max-w-6xl space-y-6">
-        {/* Header */}
         <Card>
           <CardHeader className="text-center">
             <CardTitle className="text-3xl font-bold">
@@ -112,7 +127,6 @@ export default function Search() {
           </CardHeader>
         </Card>
 
-        {/* Search Interface */}
         <Card>
           <CardContent className="pt-6">
             <div className="flex space-x-2">
@@ -128,7 +142,7 @@ export default function Search() {
                 />
               </div>
               <Button
-                onClick={handleSearch}
+                onClick={() => handleSearch()}
                 disabled={isLoading}
                 className="min-w-[120px]"
               >
@@ -152,7 +166,7 @@ export default function Search() {
               </div>
             )}
 
-            {isLoading && status && (
+            {status && (
               <div className="mt-4 rounded-md bg-muted p-4">
                 <p className="text-sm text-muted-foreground">{status}</p>
               </div>
@@ -160,14 +174,25 @@ export default function Search() {
           </CardContent>
         </Card>
 
-        {/* Results */}
         {(response || documents.length > 0) && (
           <Tabs defaultValue="response" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="response">AI Response</TabsTrigger>
               <TabsTrigger value="documents">
-                Documents ({documents.length})
+                Documents ({Math.min(documents.length, MAX_DOCS)})
               </TabsTrigger>
+              {/* ► This is your dropdown slot */}
+              <div className="flex items-center justify-end space-x-2">
+                <label className="text-gray-500">Citation style:</label>
+                <select
+                  value={citationStyle}
+                  onChange={e => setCitationStyle(e.target.value as "APA"|"MLA")}
+                  className="border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                >
+                  <option value="APA">APA</option>
+                  <option value="MLA">MLA</option>
+                </select>
+              </div>
             </TabsList>
 
             <TabsContent value="response" className="space-y-4">
@@ -240,6 +265,16 @@ export default function Search() {
                     <CardContent>
                       <p className="leading-relaxed">{doc.abstract}</p>
                     </CardContent>
+
+                    {/* ← CITATION PREVIEW */}
+                    <CitationPreview
+                      authors={doc.authors}
+                      title={doc.title}
+                      year={doc.year || 'n.d.'}
+                      source={doc.source}
+                      url={doc.url}
+                      style={citationStyle}
+                    />
                   </Card>
                 ))
               ) : (

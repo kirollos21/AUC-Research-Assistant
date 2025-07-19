@@ -21,7 +21,9 @@ class ArxivConnector(DatabaseConnector):
     
     def __init__(self):
         super().__init__("arxiv", "https://arxiv.org")
-        self.client = arxiv.Client()
+        self.client = arxiv.Client(page_size=100,
+    delay_seconds=3,
+    num_retries=3)
     
     async def search(self, query: SearchQuery) -> List[SearchResult]:
         """Search arXiv database"""

@@ -7,8 +7,19 @@ interface SearchResultsProps {
   results: FederatedSearchResponse;
 }
 
+// right under your imports
+function formatAPA(authors: string, title: string, year: string, source: string, url: string) {
+  return `${authors} (${year}). ${title}. ${source}. ${url}`;
+}
+
+function formatMLA(authors: string, title: string, year: string, source: string, url: string) {
+  return `${authors}. "${title}." ${source}, ${year}. ${url}.`;
+}
+
+
 export default function SearchResults({ results }: SearchResultsProps) {
   const [sortBy, setSortBy] = useState<'relevance' | 'date' | 'citations'>('relevance');
+  const [citationStyle, setCitationStyle] = useState<'APA' | 'MLA'>('APA')
   const [filterDatabase, setFilterDatabase] = useState<string>('all');
   const [filterAccess, setFilterAccess] = useState<string>('all');
   const [expandedAbstract, setExpandedAbstract] = useState<string | null>(null);
@@ -134,6 +145,18 @@ export default function SearchResults({ results }: SearchResultsProps) {
                 <option value="restricted">Restricted</option>
               </select>
             </div>
+
+            <div className="flex items-center space-x-2">
+  <span className="text-gray-500">Citation style:</span>
+  <select
+    value={citationStyle}
+    onChange={e => setCitationStyle(e.target.value as 'APA' | 'MLA')}
+    className="border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+  >
+    <option value="APA">APA</option>
+    <option value="MLA">MLA</option>
+  </select>
+</div>
           </div>
         </div>
 
@@ -221,6 +244,8 @@ export default function SearchResults({ results }: SearchResultsProps) {
                 )}
 
                 {/* Metadata */}
+                
+                
                 <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                   {result.publication_date && (
                     <div>
@@ -251,6 +276,7 @@ export default function SearchResults({ results }: SearchResultsProps) {
                     </div>
                   )}
                 </div>
+
 
                 {/* Keywords */}
                 {result.keywords.length > 0 && (
@@ -318,9 +344,31 @@ export default function SearchResults({ results }: SearchResultsProps) {
                 Cite
               </button>
             </div>
+                  {/* ——— Citation preview ——— */}
+<div className="mt-4 p-4 bg-gray-50 rounded-lg">
+  <span className="font-medium">Citation ({citationStyle}):</span>
+  <p className="text-sm text-gray-700 mt-1">
+    {(() => {
+      const authorList = result.authors.map(a => a.name).join(', ')
+      const year = result.publication_date
+        ? new Date(result.publication_date).getFullYear().toString()
+        : 'n.d.'
+      const source = result.journal || result.venue || result.source_database
+      const link = result.url || (result.doi && `https://doi.org/${result.doi}`) || ''
+
+      return citationStyle === 'APA'
+        ? formatAPA(authorList, result.title, year, source, link)
+        : formatMLA(authorList, result.title, year, source, link)
+    })()}
+  </p>
+</div>
           </div>
         ))}
       </div>
+
+
+
+
 
       {/* No Results */}
       {filteredAndSortedResults.length === 0 && (

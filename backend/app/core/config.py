@@ -39,7 +39,8 @@ class Settings(BaseSettings):
     # Mistral AI
     MISTRAL_API_KEY: Optional[str] = None
     MISTRAL_LLM_MODEL: str = "mistral-medium-latest"
-    MISTRAL_EMBEDDING_MODEL: str = "mistral-embed"
+    MISTRAL_EMBEDDING_MODEL: str = "mistral-embed"  # 1024 dimensions
+    # Alternative models for 384 dimensions: "all-MiniLM-L6-v2", "all-mpnet-base-v2"
     
     # Cohere AI
     # If not set, will skip the reranking step

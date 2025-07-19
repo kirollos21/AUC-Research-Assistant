@@ -70,7 +70,15 @@ class EmbeddingClient:
                 persist_directory=settings.CHROMA_PERSIST_DIRECTORY,
             )
         except Exception as e:
-            # If collection doesn't exist, it will be created automatically
+            # If there's a dimension mismatch or other error, delete the collection and recreate
+            print(f"Error initializing vector store: {e}")
+            print("Deleting existing collection and recreating...")
+            try:
+                self.chroma_client.delete_collection(self.collection_name)
+            except:
+                pass  # Collection might not exist
+            
+            # Recreate the vector store
             self.vector_store = Chroma(
                 client=self.chroma_client,
                 collection_name=self.collection_name,

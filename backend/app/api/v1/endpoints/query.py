@@ -383,3 +383,15 @@ async def health_check():
     except Exception as e:
         logger.error(f"Health check failed: {e}")
         raise HTTPException(status_code=500, detail=f"Service unhealthy: {str(e)}")
+
+
+@router.delete("/clear-vector-db")
+async def clear_vector_database():
+    """Clear the vector database collection (useful for fixing embedding dimension issues)"""
+    try:
+        embedding_client = get_embedding_client()
+        await embedding_client.clear_collection()
+        return {"message": "Vector database collection cleared successfully"}
+    except Exception as e:
+        logger.error(f"Error clearing vector database: {e}")
+        raise HTTPException(status_code=500, detail=f"Error clearing vector database: {str(e)}")

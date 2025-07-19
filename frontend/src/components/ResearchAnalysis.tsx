@@ -148,4 +148,4 @@ export default function ResearchAnalysis({ searchResults }: ResearchAnalysisProp
       )}
     </div>
   );
-} 
+}
