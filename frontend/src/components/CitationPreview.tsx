@@ -12,12 +12,51 @@ interface CitationPreviewProps {
   url: string;
 }
 
+function formatAuthorsForAPA(authors: string): string {
+  // APA format: Last, Initials - "First Middle Last" -> "Last, F. M."
+  return authors.split(', ').map(author => {
+    const nameParts = author.trim().split(' ');
+    if (nameParts.length === 1) {
+      return nameParts[0]; // Single name, return as is
+    }
+    
+    const lastName = nameParts[nameParts.length - 1];
+    const initials = nameParts.slice(0, -1).map(part => part.charAt(0) + '.').join(' ');
+    return `${lastName}, ${initials}`;
+  }).join(', ');
+}
+
+function formatAuthorsForMLA(authors: string): string {
+  // MLA format: First author "Last, First", other authors "First Last"
+  const authorList = authors.split(', ');
+  if (authorList.length === 0) return '';
+  if (authorList.length === 1) return authorList[0];
+  
+  const firstAuthor = authorList[0];
+  const otherAuthors = authorList.slice(1);
+  
+  // Format first author as "Last, First"
+  const firstAuthorParts = firstAuthor.trim().split(' ');
+  const firstAuthorFormatted = firstAuthorParts.length > 1 
+    ? `${firstAuthorParts[firstAuthorParts.length - 1]}, ${firstAuthorParts.slice(0, -1).join(' ')}`
+    : firstAuthor;
+  
+  // Other authors remain as "First Last"
+  const otherAuthorsFormatted = otherAuthors.join(', ');
+  
+  return `${firstAuthorFormatted}, ${otherAuthorsFormatted}`;
+}
+
 function formatAPA(authors: string, title: string, year: string, source: string, url: string) {
-  return `${authors} (${year}). ${title}. ${source}. ${url}`;
+  // APA format: Author, A. A., Author, B. B., & Author, C. C. (Year). Title of work. Source. URL
+  const apaAuthors = formatAuthorsForAPA(authors);
+  return `${apaAuthors} (${year}). ${title}. ${source}. ${url}`;
 }
 
 function formatMLA(authors: string, title: string, year: string, source: string, url: string) {
-  return `${authors}. "${title}." ${source}, ${year}. ${url}.`;
+  // MLA format: Author, A. A., Author, B. B., and Author, C. C. "Title of Work." Source, Year, URL.
+  const mlaAuthors = formatAuthorsForMLA(authors);
+  return `${mlaAuthors}. "${title}." ${source}, ${year}, ${url}.`;
 }
 
 export default function CitationPreview({
