@@ -42,7 +42,7 @@ export default function AdminPage() {
         <div className="text-center mb-8">
           <Link href="/" className="inline-block">
             <img 
-              src="/auc_logo.png" 
+              src="/auc_logo2.png" 
               alt="AUC Research Assistant Logo" 
               className="h-16 w-auto mx-auto mb-4"
             />
