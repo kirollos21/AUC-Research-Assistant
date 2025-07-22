@@ -24,6 +24,16 @@ An AI-powered research assistant platform that helps researchers discover, analy
 │   TypeScript    │    │   Python 3.10+  │    │   PostgreSQL    │
 │   Tailwind CSS  │    │   Pydantic v2   │    │   Redis         │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
+         ▲                       ▲
+         │                       │
+         ▼                       │
+┌─────────────────┐              │
+│   Mobile App    │──────────────┘
+│   (React Native)│
+│   TypeScript    │
+│   React Native  │
+│   Paper         │
+└─────────────────┘
 ```
 
 ## 🛠️ **Technology Stack**
@@ -45,6 +55,16 @@ An AI-powered research assistant platform that helps researchers discover, analy
 - **State Management**: React Hooks and Context API
 - **Authentication**: Local storage-based user management
 - **Routing**: Next.js App Router with dynamic pages
+
+### Mobile App (React Native)
+- **Framework**: React Native 0.72.6 with Metro bundler
+- **Language**: TypeScript for type safety
+- **UI Components**: React Native Paper for Material Design
+- **Navigation**: React Navigation v6 with stack and tab navigation
+- **State Management**: React Hooks and Context API
+- **Markdown Rendering**: React Native Markdown Display
+- **Sharing**: React Native Share for document sharing
+- **Platform Support**: Android and iOS (macOS only)
 
 ### Infrastructure
 - **Containerization**: Docker Compose with PostgreSQL and Redis
@@ -79,6 +99,17 @@ AUC-Research-Assistant/
 │   ├── public/              # Static assets (logos, images)
 │   ├── package.json         # Node.js dependencies
 │   └── next.config.ts       # Next.js configuration
+├── mobile/                   # React Native mobile application
+│   ├── src/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── screens/          # App screens
+│   │   ├── services/         # API and external services
+│   │   ├── types/           # TypeScript type definitions
+│   │   └── utils/           # Utility functions
+│   ├── android/             # Android-specific configuration
+│   ├── ios/                 # iOS-specific configuration
+│   ├── package.json         # Node.js dependencies
+│   └── README.md           # Mobile app documentation
 ├── docker/                   # Docker configuration files
 │   └── docker-compose.yml   # Multi-service container setup
 ├── docs/                    # Project documentation
@@ -134,7 +165,40 @@ npm install
 npm run dev
 ```
 
-#### 4. Access the Application
+#### 4. Mobile App Setup (React Native)
+```bash
+# Open new terminal and navigate to mobile directory
+cd mobile
+
+# Install dependencies
+npm install
+
+# Start Metro bundler
+npm start
+
+# In another terminal, run on Android device/emulator
+npm run android
+
+# For iOS (macOS only)
+npm run ios
+```
+
+**Prerequisites for Mobile Development:**
+- **Android Studio** (for Android development)
+- **Xcode** (for iOS development, macOS only)
+- **Android Emulator** or physical device
+- **Backend API** must be running first
+
+**Mobile App Features:**
+- 🔍 AI-Powered Research Queries
+- 📚 Academic Document Search
+- 📖 Markdown Response Rendering
+- 📋 Citation Generation (APA/MLA)
+- 📱 Mobile-Optimized UI
+- 🔄 Real-time Streaming
+- 📤 Document Sharing
+
+#### 5. Access the Application
 - **Frontend**: http://localhost:3000
 - **Login Page**: http://localhost:3000/login
 - **Signup Page**: http://localhost:3000/signup
@@ -490,6 +554,22 @@ npx tsc --noEmit
 
 # API connection issues
 # Check NEXT_PUBLIC_API_BASE_URL in .env.local
+```
+
+#### Mobile App Issues
+```bash
+# Metro bundler issues
+npm start -- --reset-cache
+
+# Android build issues
+cd android && ./gradlew clean && cd ..
+
+# iOS build issues (macOS only)
+cd ios && pod deintegrate && pod install && cd ..
+
+# API connection issues
+# Ensure backend is running at http://127.0.0.1:8000
+# Check API_BASE_URL in src/services/api.ts
 ```
 
 #### Docker Issues
