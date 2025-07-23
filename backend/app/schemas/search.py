@@ -12,7 +12,7 @@ class SearchQuery(BaseModel):
 
     query: str = Field(..., description="Main search query")
     databases: Optional[List[str]] = Field(
-        default=["arxiv"], description="List of databases to search"
+        default=None, description="List of databases to search"
     )
     max_results: int = Field(
         default=20, ge=1, le=100, description="Maximum results per database"

@@ -35,6 +35,9 @@ class QueryRequest(BaseModel):
     top_k: Optional[int] = Field(
         default=None, description="Number of top documents for RAG"
     )
+    databases: Optional[List[str]] = Field(
+        default=None, description="List of databases to search"
+    )
 
 
 class DocumentResult(BaseModel):
@@ -102,9 +105,7 @@ async def process_research_query(request: QueryRequest):
                     SearchQuery(
                         query=search_query,
                         max_results=max_results,
-                        databases=[
-                            "arxiv"
-                        ],  # Can be expanded to include other databases
+                        databases=request.databases, 
                     )
                 )
                 if search_response and search_response.results:
@@ -243,7 +244,7 @@ async def process_research_query_stream(request: QueryRequest):
                             SearchQuery(
                                 query=search_query,
                                 max_results=max_results,
-                                databases=["arxiv"],
+                                databases=request.databases, 
                             )
                         )
                     )
