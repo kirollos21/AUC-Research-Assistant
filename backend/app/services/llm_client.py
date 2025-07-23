@@ -37,8 +37,8 @@ class LLMClient:
         self.llm: ChatMistralAI = ChatMistralAI(
             model=settings.MISTRAL_LLM_MODEL,
             mistral_api_key=settings.MISTRAL_API_KEY,
-            temperature=0.7,
-            max_tokens=2000,
+            temperature=settings.LLM_TEMPERATURE,
+            max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
         )
 
         self.query_parser: PydanticOutputParser = PydanticOutputParser(

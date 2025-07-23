@@ -3,6 +3,7 @@ Application configuration management
 """
 
 from typing import List, Optional
+from pydantic import PositiveFloat, PositiveInt
 from pydantic_settings import BaseSettings
 from functools import lru_cache
 
@@ -35,6 +36,9 @@ class Settings(BaseSettings):
     # AI/ML APIs
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_ORG_ID: Optional[str] = None
+
+    LLM_TEMPERATURE: PositiveFloat = 0.7
+    LLM_MAX_OUTPUT_TOKENS: PositiveInt = 2000
 
     # Mistral AI
     MISTRAL_API_KEY: Optional[str] = None
