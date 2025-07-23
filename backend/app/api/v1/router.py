@@ -5,8 +5,7 @@ Main API router for v1 endpoints
 from fastapi import APIRouter
 
 # Import endpoint routers
-from app.api.v1.endpoints import search, query
-from app.api.v1.endpoints import search, query
+from app.api.v1.endpoints import query
 
 api_router = APIRouter()
 
@@ -19,13 +18,4 @@ async def ping():
 
 
 # Include endpoint routers
-api_router.include_router(search.router, prefix="/search", tags=["search"])
 api_router.include_router(query.router, prefix="/query", tags=["query"])
-api_router.include_router(query.router, prefix="/query", tags=["query"])
-
-# Future endpoint routers (to be implemented)
-# api_router.include_router(auth.router, prefix="/auth", tags=["authentication"])
-# api_router.include_router(users.router, prefix="/users", tags=["users"])
-# api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
-# api_router.include_router(research.router, prefix="/research", tags=["research"])
-# api_router.include_router(research.router, prefix="/research", tags=["research"])
