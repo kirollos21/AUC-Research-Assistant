@@ -165,7 +165,10 @@ class FederatedSearchService:
     ) -> List[str]:
         """Determine which databases to search"""
         if not requested_databases:
-            return self.available_databases
+            # Since semantic scholar has arxiv included in it, it doesn't make
+            # sense to include arxiv anymore unless the user explicitly wants
+            # it for some reason
+            return ["semantic_scholar"]
 
         # Filter to only available databases
         return [db for db in requested_databases if db in self.available_databases]
