@@ -37,8 +37,3 @@ def setup_logging() -> None:
     for logger_name, config in loggers_config.items():
         logger = logging.getLogger(logger_name)
         logger.setLevel(getattr(logging, config["level"]))
-
-
-def get_logger(name: str) -> logging.Logger:
-    """Get a logger instance with the given name"""
-    return logging.getLogger(name)
