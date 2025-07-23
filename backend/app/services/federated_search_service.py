@@ -10,6 +10,9 @@ import hashlib
 from collections import defaultdict
 
 from app.services.database_connectors.arxiv_connector import ArxivConnector
+from app.services.database_connectors.semantic_scholar_connector import (
+    SemanticScholarConnector,
+)
 from app.schemas.search import (
     SearchQuery,
     SearchResult,
@@ -29,6 +32,7 @@ class FederatedSearchService:
     def __init__(self):
         self.connectors = {
             "arxiv": ArxivConnector(),
+            "semantic_scholar": SemanticScholarConnector(),
             # Add more connectors as they're implemented
             # "pubmed": PubmedConnector(),
             # "crossref": CrossrefConnector(),

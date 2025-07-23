@@ -47,6 +47,10 @@ class Settings(BaseSettings):
     COHERE_API_KEY: Optional[str] = None
     COHERE_RERANK_MODEL: str = "rerank-v3.5"
     COHERE_TOP_N: int = 10
+    
+    # Semantic Scholar API
+    # If not set, will proceed without API key (higher rate limits apply)
+    SEMANTIC_SCHOLAR_API_KEY: Optional[str] = None
 
     # Vector Database
     VECTOR_DB_TYPE: str = "chromadb"
