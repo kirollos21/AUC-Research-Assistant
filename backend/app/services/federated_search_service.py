@@ -39,6 +39,9 @@ class FederatedSearchService:
             # "doaj": DOAJConnector(),
         }
         self.available_databases = list(self.connectors.keys())
+        logger.info(
+            f"Initialized FederatedSearchService with connectors {self.connectors}"
+        )
 
     async def search(self, query: SearchQuery) -> FederatedSearchResponse:
         """
@@ -55,6 +58,7 @@ class FederatedSearchService:
         try:
             # Determine which databases to search
             databases_to_search = self._get_databases_to_search(query.databases)
+            logger.info(f"Searching in databases {databases_to_search}")
 
             # Execute searches in parallel
             search_tasks = []
