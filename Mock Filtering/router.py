@@ -3,6 +3,7 @@ from typing import List, Dict
 
 api_router = APIRouter()  # Renamed to api_router to match your import in main.py
 
+
 # Example mock function (replace with your real arXiv search function)
 async def search_arxiv_logic(query: str) -> List[Dict]:
     # Simulate returned results from arXiv — replace this with actual API call logic
@@ -15,7 +16,7 @@ async def search_arxiv_logic(query: str) -> List[Dict]:
             "publication_date": "2022-01-01",
             "url": "https://arxiv.org/abs/123",
             "doi": "10.1000/xyz123",
-            "accessType": "open"
+            "accessType": "open",
         },
         {
             "id": "456",
@@ -25,9 +26,10 @@ async def search_arxiv_logic(query: str) -> List[Dict]:
             "publication_date": "2023-01-01",
             "url": "https://example.com/restricted-paper",
             "doi": "10.1000/xyz456",
-            "accessType": "restricted"
-        }
+            "accessType": "restricted",
+        },
     ]
+
 
 @api_router.post("/search_arxiv")
 async def search_arxiv(request: Request):

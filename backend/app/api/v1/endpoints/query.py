@@ -88,9 +88,9 @@ async def process_research_query(request: QueryRequest):
 
         # Step 1: Generate database queries
         logger.info("Generating database queries...")
-        database_queries: List[Dict[str, str]] = (
-            await llm_client.generate_database_queries(request.query)
-        )
+        database_queries: List[
+            Dict[str, str]
+        ] = await llm_client.generate_database_queries(request.query)
         logger.info(f"Generated {len(database_queries)} database queries")
 
         # Step 2: Search databases with generated queries
@@ -105,7 +105,7 @@ async def process_research_query(request: QueryRequest):
                     SearchQuery(
                         query=search_query,
                         max_results=max_results,
-                        databases=request.databases, 
+                        databases=request.databases,
                     )
                 )
                 if search_response and search_response.results:
@@ -141,7 +141,7 @@ async def process_research_query(request: QueryRequest):
         top_documents: List[Dict[str, Any]] = await embedding_client.similarity_search(
             query=request.query, k=top_k
         )
-        
+
         # Step 4.5: Rerank documents using Cohere
         # TODO: add getting top_n from api request data
         top_n: int = settings.COHERE_TOP_N
@@ -149,9 +149,7 @@ async def process_research_query(request: QueryRequest):
         if reranker.is_available() and top_documents:
             logger.info("Reranking documents with Cohere...")
             top_documents = await reranker.rerank_documents(
-                query=request.query,
-                documents=top_documents,
-                top_n=top_n
+                query=request.query, documents=top_documents, top_n=top_n
             )
 
         # Step 5: Generate LLM response with context
@@ -222,9 +220,9 @@ async def process_research_query_stream(request: QueryRequest):
             # Step 1: Generate database queries
             yield f"data: {json.dumps({'type': 'status', 'message': 'Generating search queries...'})}\n\n"
 
-            database_queries: List[Dict[str, str]] = (
-                await llm_client.generate_database_queries(request.query)
-            )
+            database_queries: List[
+                Dict[str, str]
+            ] = await llm_client.generate_database_queries(request.query)
 
             yield f"data: {json.dumps({'type': 'queries', 'queries': database_queries})}\n\n"
 
@@ -236,7 +234,7 @@ async def process_research_query_stream(request: QueryRequest):
 
             for i, query_info in enumerate(database_queries):
                 search_query: str = query_info["query"]
-                yield f"data: {json.dumps({'type': 'status', 'message': f'Searching with query {i+1}/{len(database_queries)}: {query_info["focus"]}'})}\n\n"
+                yield f"data: {json.dumps({'type': 'status', 'message': f'Searching with query {i + 1}/{len(database_queries)}: {query_info["focus"]}'})}\n\n"
 
                 try:
                     search_response: FederatedSearchResponse = (
@@ -244,7 +242,7 @@ async def process_research_query_stream(request: QueryRequest):
                             SearchQuery(
                                 query=search_query,
                                 max_results=max_results,
-                                databases=request.databases, 
+                                databases=request.databases,
                             )
                         )
                     )
@@ -275,19 +273,17 @@ async def process_research_query_stream(request: QueryRequest):
             yield f"data: {json.dumps({'type': 'status', 'message': 'Finding most relevant documents...'})}\n\n"
 
             top_k: int = request.top_k or settings.RAG_TOP_K
-            top_documents: List[Dict[str, Any]] = (
-                await embedding_client.similarity_search(query=request.query, k=top_k)
-            )
-            
+            top_documents: List[
+                Dict[str, Any]
+            ] = await embedding_client.similarity_search(query=request.query, k=top_k)
+
             # Step 4.5: Rerank documents using Cohere
             top_n: int = settings.COHERE_TOP_N
             reranker = get_cohere_reranker()
             if reranker.is_available() and top_documents:
                 yield f"data: {json.dumps({'type': 'status', 'message': 'Reranking documents with Cohere...'})}\n\n"
                 top_documents = await reranker.rerank_documents(
-                    query=request.query,
-                    documents=top_documents,
-                    top_n=top_n
+                    query=request.query, documents=top_documents, top_n=top_n
                 )
 
             # Send top documents
@@ -324,9 +320,7 @@ async def process_research_query_stream(request: QueryRequest):
                     await asyncio.sleep(0.05)  # Small delay for streaming effect
 
             else:
-                error_message: str = (
-                    "I couldn't find relevant academic documents to answer your question. Please try rephrasing your query or being more specific about the research area."
-                )
+                error_message: str = "I couldn't find relevant academic documents to answer your question. Please try rephrasing your query or being more specific about the research area."
                 yield f"data: {json.dumps({'type': 'response_chunk', 'chunk': error_message})}\n\n"
 
             # Send completion
@@ -360,7 +354,7 @@ async def health_check():
 
         # Test federated search
         search_service = FederatedSearchService()
-        
+
         # Test Cohere reranker
         reranker = get_cohere_reranker()
 
@@ -370,7 +364,9 @@ async def health_check():
                 "llm_client": "available",
                 "embedding_client": "available",
                 "search_service": "available",
-                "cohere_reranker": "available" if reranker.is_available() else "unavailable",
+                "cohere_reranker": "available"
+                if reranker.is_available()
+                else "unavailable",
             },
             "config": {
                 "llm_model": settings.MISTRAL_LLM_MODEL,
@@ -395,4 +391,6 @@ async def clear_vector_database():
         return {"message": "Vector database collection cleared successfully"}
     except Exception as e:
         logger.error(f"Error clearing vector database: {e}")
-        raise HTTPException(status_code=500, detail=f"Error clearing vector database: {str(e)}")
+        raise HTTPException(
+            status_code=500, detail=f"Error clearing vector database: {str(e)}"
+        )

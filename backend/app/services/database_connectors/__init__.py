@@ -1,1 +1,1 @@
-# Database connectors for federated search 
+# Database connectors for federated search

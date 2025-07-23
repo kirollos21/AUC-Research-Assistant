@@ -77,7 +77,7 @@ class EmbeddingClient:
                 self.chroma_client.delete_collection(self.collection_name)
             except:
                 pass  # Collection might not exist
-            
+
             # Recreate the vector store
             self.vector_store = Chroma(
                 client=self.chroma_client,

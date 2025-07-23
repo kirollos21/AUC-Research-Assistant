@@ -35,19 +35,19 @@ class Settings(BaseSettings):
     # AI/ML APIs
     OPENAI_API_KEY: Optional[str] = None
     OPENAI_ORG_ID: Optional[str] = None
-    
+
     # Mistral AI
     MISTRAL_API_KEY: Optional[str] = None
     MISTRAL_LLM_MODEL: str = "mistral-medium-latest"
     MISTRAL_EMBEDDING_MODEL: str = "mistral-embed"  # 1024 dimensions
     # Alternative models for 384 dimensions: "all-MiniLM-L6-v2", "all-mpnet-base-v2"
-    
+
     # Cohere AI
     # If not set, will skip the reranking step
     COHERE_API_KEY: Optional[str] = None
     COHERE_RERANK_MODEL: str = "rerank-v3.5"
     COHERE_TOP_N: int = 10
-    
+
     # Semantic Scholar API
     # If not set, will proceed without API key (higher rate limits apply)
     SEMANTIC_SCHOLAR_API_KEY: Optional[str] = None
@@ -55,7 +55,7 @@ class Settings(BaseSettings):
     # Vector Database
     VECTOR_DB_TYPE: str = "chromadb"
     CHROMA_PERSIST_DIRECTORY: str = "./data/chroma_db"
-    
+
     # RAG Configuration
     RAG_TOP_K: int = 20
     RAG_DATABASE_CANDIDATES: int = 50

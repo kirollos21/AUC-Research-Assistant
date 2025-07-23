@@ -19,7 +19,7 @@ app = FastAPI(
     version=settings.APP_VERSION,
     description="AI-powered research assistant for academic paper discovery and analysis",
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
 )
 
 # Add CORS middleware
@@ -31,6 +31,7 @@ app.add_middleware(
     allow_headers=settings.CORS_HEADERS,
 )
 
+
 @app.get("/")
 async def root():
     """Root endpoint"""
@@ -38,8 +39,9 @@ async def root():
         "message": "Welcome to AUC Research Assistant API",
         "version": settings.APP_VERSION,
         "docs": "/docs",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
+
 
 @app.get("/health")
 async def health_check():
@@ -48,13 +50,15 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "version": settings.APP_VERSION,
-        "environment": settings.ENVIRONMENT
+        "environment": settings.ENVIRONMENT,
     }
+
 
 @app.get("/api/v1/ping")
 async def ping():
     """Simple ping endpoint for API health check"""
     return {"message": "pong", "status": "ok"}
+
 
 if __name__ == "__main__":
     uvicorn.run(
@@ -62,5 +66,5 @@ if __name__ == "__main__":
         host=settings.HOST,
         port=settings.PORT,
         reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower()
-    ) 
+        log_level=settings.LOG_LEVEL.lower(),
+    )

@@ -22,12 +22,12 @@ async def lifespan(app: FastAPI):
     # Startup
     setup_logging()
     logging.info("Starting AUC Research Assistant API...")
-    
+
     # Initialize database, vector store, etc.
     # TODO: Add database initialization
-    
+
     yield
-    
+
     # Shutdown
     logging.info("Shutting down AUC Research Assistant API...")
     # TODO: Add cleanup code
@@ -40,7 +40,7 @@ app = FastAPI(
     description="AI-powered research assistant for academic paper discovery and analysis",
     docs_url="/docs" if settings.DEBUG else None,
     redoc_url="/redoc" if settings.DEBUG else None,
-    lifespan=lifespan
+    lifespan=lifespan,
 )
 
 # Add CORS middleware
@@ -60,7 +60,7 @@ async def root():
         "message": "Welcome to AUC Research Assistant API",
         "version": settings.APP_VERSION,
         "docs": "/docs" if settings.DEBUG else "Documentation disabled in production",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
 
 
@@ -71,7 +71,7 @@ async def health_check():
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
         "version": settings.APP_VERSION,
-        "environment": settings.ENVIRONMENT
+        "environment": settings.ENVIRONMENT,
     }
 
 
@@ -87,10 +87,10 @@ async def detailed_health_check():
             "api": "healthy",
             "database": "unknown",  # TODO: Add database health check
             "vector_db": "unknown",  # TODO: Add vector DB health check
-            "redis": "unknown"  # TODO: Add Redis health check
-        }
+            "redis": "unknown",  # TODO: Add Redis health check
+        },
     }
-    
+
     return health_status
 
 
@@ -106,8 +106,8 @@ async def not_found_handler(request, exc):
         content={
             "error": "Not Found",
             "message": "The requested resource was not found",
-            "path": str(request.url.path)
-        }
+            "path": str(request.url.path),
+        },
     )
 
 
@@ -117,5 +117,5 @@ if __name__ == "__main__":
         host=settings.HOST,
         port=settings.PORT,
         reload=settings.DEBUG,
-        log_level=settings.LOG_LEVEL.lower()
-    ) 
+        log_level=settings.LOG_LEVEL.lower(),
+    )

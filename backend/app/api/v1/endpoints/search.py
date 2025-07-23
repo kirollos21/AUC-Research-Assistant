@@ -7,11 +7,7 @@ from fastapi import APIRouter, HTTPException, Depends, Query
 from fastapi.responses import JSONResponse
 import logging
 
-from app.schemas.search import (
-    SearchQuery, 
-    FederatedSearchResponse, 
-    DatabaseStatus
-)
+from app.schemas.search import SearchQuery, FederatedSearchResponse, DatabaseStatus
 from app.services.federated_search_service import federated_search_service
 from app.services.llm_service import llm_service
 from app.services.database_connectors.arxiv_connector import ArxivConnector
@@ -25,13 +21,13 @@ router = APIRouter()
 async def federated_search(query: SearchQuery):
     """
     Perform federated search across multiple academic databases
-    
+
     This endpoint searches across multiple academic databases including:
     - arXiv (preprints)
     - PubMed (biomedical literature)
     - CrossRef (scholarly publications)
     - DOAJ (open access journals)
-    
+
     The search includes:
     - Query expansion using LLM
     - Semantic similarity scoring
@@ -40,24 +36,26 @@ async def federated_search(query: SearchQuery):
     """
     try:
         logger.info(f"Federated search request: {query.query}")
-        
+
         # Validate query
         if not query.query.strip():
             raise HTTPException(status_code=400, detail="Query cannot be empty")
-        
+
         if len(query.query) > 1000:
-            raise HTTPException(status_code=400, detail="Query too long (max 1000 characters)")
-        
+            raise HTTPException(
+                status_code=400, detail="Query too long (max 1000 characters)"
+            )
+
         # Perform federated search
         response = await federated_search_service.search(query)
-        
+
         logger.info(
             f"Search completed: {response.stats.total_results} results in "
             f"{response.stats.search_time_ms}ms"
         )
-        
+
         return response
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -94,11 +92,11 @@ async def get_database_status():
 @router.post("/query/expand")
 async def expand_query(
     query: str = Query(..., description="Query to expand"),
-    context: str = Query(None, description="Optional context for expansion")
+    context: str = Query(None, description="Optional context for expansion"),
 ):
     """
     Expand a search query using LLM to generate related terms and synonyms
-    
+
     This endpoint helps users improve their search queries by providing:
     - Synonyms and related terms
     - Semantic variations
@@ -107,20 +105,22 @@ async def expand_query(
     try:
         if not query.strip():
             raise HTTPException(status_code=400, detail="Query cannot be empty")
-        
+
         if len(query) > 500:
-            raise HTTPException(status_code=400, detail="Query too long (max 500 characters)")
-        
+            raise HTTPException(
+                status_code=400, detail="Query too long (max 500 characters)"
+            )
+
         expansion = await llm_service.expand_query(query, context)
-        
+
         return {
             "original_query": expansion.original_query,
             "expanded_queries": expansion.expanded_queries,
             "synonyms": expansion.synonyms,
             "related_terms": expansion.related_terms,
-            "semantic_variants": expansion.semantic_variants
+            "semantic_variants": expansion.semantic_variants,
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -131,7 +131,7 @@ async def expand_query(
 @router.get("/suggestions")
 async def get_search_suggestions(
     query: str = Query(..., description="Original query"),
-    results_count: int = Query(..., description="Number of results found")
+    results_count: int = Query(..., description="Number of results found"),
 ):
     """
     Get search suggestions for improving query results
@@ -139,15 +139,17 @@ async def get_search_suggestions(
     try:
         if not query.strip():
             raise HTTPException(status_code=400, detail="Query cannot be empty")
-        
-        suggestions = await llm_service.generate_search_suggestions(query, results_count)
-        
+
+        suggestions = await llm_service.generate_search_suggestions(
+            query, results_count
+        )
+
         return {
             "query": query,
             "results_count": results_count,
-            "suggestions": suggestions
+            "suggestions": suggestions,
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
@@ -162,6 +164,7 @@ async def get_arxiv_categories():
     """
     try:
         from app.services.database_connectors.arxiv_connector import ArxivConnector
+
         connector = ArxivConnector()
         categories = connector.get_categories()
         return categories
@@ -171,13 +174,10 @@ async def get_arxiv_categories():
 
 
 @router.post("/analyze")
-async def analyze_search_results(
-    query: str,
-    results: List[Dict[str, Any]]
-):
+async def analyze_search_results(query: str, results: List[Dict[str, Any]]):
     """
     Analyze search results to extract insights and patterns
-    
+
     This endpoint provides:
     - Key concept extraction
     - Topic clustering
@@ -187,17 +187,17 @@ async def analyze_search_results(
     try:
         if not query.strip():
             raise HTTPException(status_code=400, detail="Query cannot be empty")
-        
+
         if not results:
             return {
                 "query": query,
                 "analysis": {
                     "key_concepts": [],
                     "trends": [],
-                    "insights": ["No results to analyze"]
-                }
+                    "insights": ["No results to analyze"],
+                },
             }
-        
+
         # Extract text from results for analysis
         texts = []
         for result in results[:20]:  # Limit to first 20 results
@@ -205,11 +205,11 @@ async def analyze_search_results(
             if result.get("abstract"):
                 text += " " + result["abstract"]
             texts.append(text)
-        
+
         # Analyze combined text
         combined_text = " ".join(texts)
         key_concepts = await llm_service.extract_key_concepts(combined_text)
-        
+
         return {
             "query": query,
             "results_analyzed": len(results),
@@ -219,36 +219,36 @@ async def analyze_search_results(
                 "insights": [
                     f"Found {len(results)} relevant papers",
                     f"Identified {len(key_concepts)} key concepts",
-                    "Consider exploring related terms for broader coverage"
-                ]
-            }
+                    "Consider exploring related terms for broader coverage",
+                ],
+            },
         }
-        
+
     except HTTPException:
         raise
     except Exception as e:
         logger.error(f"Analysis error: {e}")
-        raise HTTPException(status_code=500, detail="Error analyzing results") 
-    
+        raise HTTPException(status_code=500, detail="Error analyzing results")
+
 
 @router.post("/search_arxiv")
 async def search_arxiv(s: str):
-    """    Search arXiv database for academic papers 
-    """
+    """Search arXiv database for academic papers"""
     q = SearchQuery(
         query=s,
         max_results=10,
         enable_semantic_search=False,
-        access_preferences=["open_access", "licensed", "any"])
-    
+        access_preferences=["open_access", "licensed", "any"],
+    )
+
     arxiv_connector = ArxivConnector()
     search_query = SearchQuery(
         query=q.query,
         max_results=q.max_results,
-        enable_semantic_search=False  # or True if you want
+        enable_semantic_search=False,  # or True if you want
     )
     results = await arxiv_connector.search(search_query)
-    
+
     if not results:
         raise HTTPException(status_code=404, detail="No results found")
     else:

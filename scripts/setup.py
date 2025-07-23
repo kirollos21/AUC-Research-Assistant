@@ -16,12 +16,7 @@ def run_command(command, cwd=None, check=True):
     print(f"Running: {command}")
     try:
         result = subprocess.run(
-            command, 
-            shell=True, 
-            cwd=cwd, 
-            check=check,
-            capture_output=True,
-            text=True
+            command, shell=True, cwd=cwd, check=check, capture_output=True, text=True
         )
         if result.stdout:
             print(result.stdout)
@@ -37,7 +32,7 @@ def run_command(command, cwd=None, check=True):
 def check_prerequisites():
     """Check if required tools are installed"""
     print("Checking prerequisites...")
-    
+
     # Check Python
     try:
         result = run_command("python --version")
@@ -45,7 +40,7 @@ def check_prerequisites():
     except:
         print("✗ Python not found. Please install Python 3.11+")
         sys.exit(1)
-    
+
     # Check Node.js
     try:
         result = run_command("node --version")
@@ -53,7 +48,7 @@ def check_prerequisites():
     except:
         print("✗ Node.js not found. Please install Node.js 18+")
         sys.exit(1)
-    
+
     # Check npm
     try:
         result = run_command("npm --version")
@@ -66,12 +61,12 @@ def check_prerequisites():
 def setup_backend():
     """Set up the Python backend environment"""
     print("\n🐍 Setting up Backend (Python/FastAPI)...")
-    
+
     backend_dir = Path("backend")
     if not backend_dir.exists():
         print("✗ Backend directory not found")
         return False
-    
+
     # Create virtual environment
     venv_path = backend_dir / "venv"
     if not venv_path.exists():
@@ -79,7 +74,7 @@ def setup_backend():
         run_command("python -m venv venv", cwd=backend_dir)
     else:
         print("✓ Virtual environment already exists")
-    
+
     # Activate virtual environment and install dependencies
     if platform.system() == "Windows":
         pip_cmd = "venv\\Scripts\\pip"
@@ -87,22 +82,22 @@ def setup_backend():
     else:
         pip_cmd = "venv/bin/pip"
         python_cmd = "venv/bin/python"
-    
+
     print("Installing Python dependencies...")
     run_command(f"{pip_cmd} install --upgrade pip", cwd=backend_dir)
     run_command(f"{pip_cmd} install -r requirements.txt", cwd=backend_dir)
-    
+
     # Create .env file if it doesn't exist
     env_file = backend_dir / ".env"
     env_example = backend_dir / "env.example"
     if not env_file.exists() and env_example.exists():
         print("Creating .env file from template...")
-        with open(env_example, 'r') as f:
+        with open(env_example, "r") as f:
             content = f.read()
-        with open(env_file, 'w') as f:
+        with open(env_file, "w") as f:
             f.write(content)
         print("⚠️  Please edit backend/.env with your configuration")
-    
+
     print("✓ Backend setup complete!")
     return True
 
@@ -110,22 +105,24 @@ def setup_backend():
 def setup_frontend():
     """Set up the Next.js frontend environment"""
     print("\n⚛️  Setting up Frontend (Next.js)...")
-    
+
     frontend_dir = Path("frontend")
     if not frontend_dir.exists():
         print("✗ Frontend directory not found")
         return False
-    
+
     # Check if package.json exists
     package_json = frontend_dir / "package.json"
     if not package_json.exists():
-        print("✗ Frontend not initialized. Please run: npx create-next-app@latest frontend")
+        print(
+            "✗ Frontend not initialized. Please run: npx create-next-app@latest frontend"
+        )
         return False
-    
+
     # Install dependencies
     print("Installing Node.js dependencies...")
     run_command("npm install", cwd=frontend_dir)
-    
+
     # Create .env.local file if it doesn't exist
     env_file = frontend_dir / ".env.local"
     if not env_file.exists():
@@ -134,10 +131,10 @@ def setup_frontend():
 NEXT_PUBLIC_API_URL=http://localhost:8000
 NEXT_PUBLIC_APP_NAME=AUC Research Assistant
 """
-        with open(env_file, 'w') as f:
+        with open(env_file, "w") as f:
             f.write(env_content)
         print("⚠️  Please edit frontend/.env.local with your configuration")
-    
+
     print("✓ Frontend setup complete!")
     return True
 
@@ -145,7 +142,7 @@ NEXT_PUBLIC_APP_NAME=AUC Research Assistant
 def create_start_script():
     """Create a convenient start script for development"""
     print("\n📝 Creating development start script...")
-    
+
     if platform.system() == "Windows":
         script_content = """@echo off
 echo Starting AUC Research Assistant Development Environment...
@@ -161,10 +158,10 @@ echo Backend: http://localhost:8000
 echo Frontend: http://localhost:3000
 echo API Docs: http://localhost:8000/docs
 """
-        with open("start-dev.bat", 'w') as f:
+        with open("start-dev.bat", "w") as f:
             f.write(script_content)
         print("✓ Created start-dev.bat")
-    
+
     else:
         script_content = """#!/bin/bash
 echo "Starting AUC Research Assistant Development Environment..."
@@ -199,7 +196,7 @@ cleanup() {
 trap cleanup INT
 wait
 """
-        with open("start-dev.sh", 'w') as f:
+        with open("start-dev.sh", "w") as f:
             f.write(script_content)
         run_command("chmod +x start-dev.sh")
         print("✓ Created start-dev.sh")
@@ -209,20 +206,20 @@ def main():
     """Main setup function"""
     print("🚀 AUC Research Assistant - Development Setup")
     print("=" * 50)
-    
+
     # Change to project root directory
     script_dir = Path(__file__).parent
     project_root = script_dir.parent
     os.chdir(project_root)
-    
+
     check_prerequisites()
-    
+
     backend_success = setup_backend()
     frontend_success = setup_frontend()
-    
+
     if backend_success and frontend_success:
         create_start_script()
-        
+
         print("\n🎉 Setup complete!")
         print("\nNext steps:")
         print("1. Edit backend/.env with your configuration")
@@ -242,4 +239,4 @@ def main():
 
 
 if __name__ == "__main__":
-    main() 
+    main()

@@ -98,8 +98,10 @@ class FederatedSearchService:
 
             # Sort by publication date (most recent first)
             deduplicated_results.sort(
-                key=lambda x: x.publication_date if x.publication_date else datetime.min, 
-                reverse=True
+                key=lambda x: x.publication_date
+                if x.publication_date
+                else datetime.min,
+                reverse=True,
             )
 
             # Calculate search time
@@ -240,7 +242,6 @@ class FederatedSearchService:
         # Last resort: use full title hash
         return f"full_title:{hashlib.md5(result.title.lower().encode()).hexdigest()}"
 
-
     def _calculate_recency_score(self, publication_date: Optional[datetime]) -> float:
         """Calculate recency score (0-1, higher = more recent)"""
         if not publication_date:
@@ -323,4 +324,3 @@ class FederatedSearchService:
 
 # Global instance
 federated_search_service = FederatedSearchService()
-

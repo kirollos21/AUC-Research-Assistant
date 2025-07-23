@@ -13,15 +13,25 @@ try:
 except ImportError:
     # If main_simple doesn't exist, create a minimal app for testing
     from fastapi import FastAPI
+
     app = FastAPI(title="Test App")
-    
+
     @app.get("/")
     def root():
-        return {"message": "Welcome to AUC Research Assistant API", "version": "1.0.0", "timestamp": "test"}
-    
+        return {
+            "message": "Welcome to AUC Research Assistant API",
+            "version": "1.0.0",
+            "timestamp": "test",
+        }
+
     @app.get("/health")
     def health():
-        return {"status": "healthy", "timestamp": "test", "version": "1.0.0", "environment": "test"}
+        return {
+            "status": "healthy",
+            "timestamp": "test",
+            "version": "1.0.0",
+            "environment": "test",
+        }
 
 
 client = TestClient(app)
@@ -61,4 +71,4 @@ def test_api_ping():
 def test_not_found():
     """Test 404 handling"""
     response = client.get("/nonexistent-endpoint")
-    assert response.status_code == 404 
+    assert response.status_code == 404

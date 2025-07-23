@@ -11,13 +11,11 @@ from app.api.v1.endpoints import search, query
 api_router = APIRouter()
 
 
-
 # Health check endpoints (these are already in main.py, but keeping for reference)
 @api_router.get("/ping")
 async def ping():
     """Simple ping endpoint for API health check"""
     return {"message": "pong", "status": "ok"}
-
 
 
 # Include endpoint routers
@@ -31,4 +29,3 @@ api_router.include_router(query.router, prefix="/query", tags=["query"])
 # api_router.include_router(documents.router, prefix="/documents", tags=["documents"])
 # api_router.include_router(research.router, prefix="/research", tags=["research"])
 # api_router.include_router(research.router, prefix="/research", tags=["research"])
-

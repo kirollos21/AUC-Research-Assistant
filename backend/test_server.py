@@ -10,7 +10,7 @@ from typing import List, Dict, Any
 app = FastAPI(
     title="Test Research Assistant API",
     version="1.0.0",
-    description="Simple test server"
+    description="Simple test server",
 )
 
 # Add CORS middleware
@@ -22,14 +22,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 async def root():
     """Root endpoint"""
     return {
         "message": "Test Research Assistant API is running!",
         "version": "1.0.0",
-        "timestamp": datetime.utcnow().isoformat()
+        "timestamp": datetime.utcnow().isoformat(),
     }
+
 
 @app.get("/health")
 async def health_check():
@@ -37,8 +39,9 @@ async def health_check():
     return {
         "status": "healthy",
         "timestamp": datetime.utcnow().isoformat(),
-        "version": "1.0.0"
+        "version": "1.0.0",
     }
+
 
 @app.post("/api/v1/search/search")
 async def search_endpoint():
@@ -54,7 +57,7 @@ async def search_endpoint():
                 "url": "https://arxiv.org/abs/test123",
                 "score": 0.95,
                 "published_date": "2024-01-15",
-                "categories": ["cs.AI", "cs.LG"]
+                "categories": ["cs.AI", "cs.LG"],
             },
             {
                 "title": "Another Test Paper",
@@ -64,17 +67,18 @@ async def search_endpoint():
                 "url": "https://pubmed.ncbi.nlm.nih.gov/test456",
                 "score": 0.87,
                 "published_date": "2024-02-20",
-                "categories": ["research", "methodology"]
-            }
+                "categories": ["research", "methodology"],
+            },
         ],
         "total_results": 2,
         "search_time_ms": 150,
         "stats": {
             "total_results": 2,
             "search_time_ms": 150,
-            "databases_searched": ["arxiv", "pubmed"]
-        }
+            "databases_searched": ["arxiv", "pubmed"],
+        },
     }
+
 
 @app.get("/api/v1/search/databases/status")
 async def database_status():
@@ -84,15 +88,16 @@ async def database_status():
             "name": "arxiv",
             "status": "healthy",
             "response_time_ms": 45,
-            "last_check": datetime.utcnow().isoformat()
+            "last_check": datetime.utcnow().isoformat(),
         },
         {
             "name": "pubmed",
-            "status": "healthy", 
+            "status": "healthy",
             "response_time_ms": 67,
-            "last_check": datetime.utcnow().isoformat()
-        }
+            "last_check": datetime.utcnow().isoformat(),
+        },
     ]
+
 
 @app.post("/api/v1/search/analyze")
 async def analyze_endpoint():
@@ -102,10 +107,15 @@ async def analyze_endpoint():
         "analysis": {
             "key_concepts": ["AI", "machine learning", "research"],
             "trends": ["increasing interest in AI", "focus on practical applications"],
-            "insights": ["Strong focus on practical AI applications", "Growing interdisciplinary research"]
-        }
+            "insights": [
+                "Strong focus on practical AI applications",
+                "Growing interdisciplinary research",
+            ],
+        },
     }
+
 
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run("test_server:app", host="0.0.0.0", port=8000, reload=True) 
+
+    uvicorn.run("test_server:app", host="0.0.0.0", port=8000, reload=True)
