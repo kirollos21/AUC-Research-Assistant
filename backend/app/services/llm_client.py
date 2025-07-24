@@ -2,7 +2,8 @@
 LLM client service for Mistral integration
 """
 
-from typing import List, Dict, Any, Optional, Union
+from typing import AsyncIterator, List, Dict, Any, Optional, Union
+from langchain_core.messages.base import BaseMessageChunk
 from langchain_mistralai.chat_models import ChatMistralAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
@@ -91,8 +92,10 @@ Generate targeted search queries for academic databases that will help find rele
             return [{"query": user_query, "focus": "Original query"}]
 
     async def generate_rag_response(
-        self, user_query: str, context_documents: List[Dict[str, Any]]
-    ) -> str:
+        self,
+        user_query: str,
+        context_documents: List[Dict[str, Any]],
+    ) -> AsyncIterator[BaseMessageChunk]:
         """
         Generate response using retrieved documents as context
 
@@ -101,7 +104,7 @@ Generate targeted search queries for academic databases that will help find rele
             context_documents: List of relevant documents from vector search
 
         Returns:
-            Generated response based on the context
+            Async iterator that generates message chunks that can be collected into a message
         """
         # Format context documents
         context_text: str = ""
@@ -138,11 +141,7 @@ Please provide a comprehensive answer to the user's question based on the academ
             HumanMessage(content=human_prompt),
         ]
 
-        try:
-            response = await self.llm.ainvoke(messages)
-            return response.content
-        except Exception as e:
-            return f"I apologize, but I encountered an error while generating the response: {str(e)}"
+        return self.llm.astream(messages)
 
 
 # Global instance
