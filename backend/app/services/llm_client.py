@@ -36,7 +36,6 @@ class LLMClient:
 
         self.llm: ChatMistralAI = ChatMistralAI(
             model=settings.MISTRAL_LLM_MODEL,
-            mistral_api_key=settings.MISTRAL_API_KEY,
             temperature=settings.LLM_TEMPERATURE,
             max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
         )
