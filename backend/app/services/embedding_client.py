@@ -3,6 +3,7 @@ Embedding client service for Mistral integration
 """
 
 from typing import List, Dict, Any, Optional, Union
+from chromadb.api import ClientAPI
 from langchain_core.embeddings.embeddings import Embeddings
 from langchain_core.vectorstores.base import VectorStore
 from langchain_mistralai.embeddings import MistralAIEmbeddings
@@ -48,7 +49,7 @@ class EmbeddingClient:
         os.makedirs(settings.CHROMA_PERSIST_DIRECTORY, exist_ok=True)
 
         # Initialize ChromaDB client
-        self.chroma_client: chromadb.PersistentClient = chromadb.PersistentClient(
+        self.chroma_client: ClientAPI = chromadb.PersistentClient(
             path=settings.CHROMA_PERSIST_DIRECTORY,
             settings=ChromaSettings(anonymized_telemetry=False),
         )
