@@ -3,8 +3,10 @@ LLM client service for Mistral integration
 """
 
 from typing import AsyncIterator, List, Dict, Any, Optional, Union
+from langchain_core.language_models import BaseChatModel
 from langchain_core.messages.base import BaseMessageChunk
 from langchain_mistralai.chat_models import ChatMistralAI
+from langchain_openai.chat_models import ChatOpenAI
 from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
@@ -38,11 +40,22 @@ class LLMClient:
         if not settings.MISTRAL_API_KEY:
             raise ValueError("MISTRAL_API_KEY not found in settings")
 
-        self.llm: ChatMistralAI = ChatMistralAI(
-            model=settings.MISTRAL_LLM_MODEL,
-            temperature=settings.LLM_TEMPERATURE,
-            max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
-        )
+        match settings.LLM_PROVIDER:
+            case "mistral":
+                self.llm: BaseChatModel = ChatMistralAI(
+                    model=settings.LLM_MODEL,
+                    temperature=settings.LLM_TEMPERATURE,
+                    max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
+                    max_retries=3,
+                )
+            case "openai":
+                self.llm: BaseChatModel = ChatOpenAI(
+                    model=settings.LLM_MODEL,
+                    temperature=settings.LLM_TEMPERATURE,
+                    max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
+                    max_retries=3,
+                    base_url=settings.LLM_OPENAI_BASEURL,
+                )
 
         self.query_parser: PydanticOutputParser = PydanticOutputParser(
             pydantic_object=DatabaseQueries

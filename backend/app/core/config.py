@@ -2,7 +2,7 @@
 Application configuration management
 """
 
-from typing import List, Optional
+from typing import List, Literal, Optional
 from pydantic import PositiveFloat, PositiveInt
 from pydantic_settings import BaseSettings
 from functools import lru_cache
@@ -33,18 +33,18 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
-    # AI/ML APIs
-    OPENAI_API_KEY: Optional[str] = None
-    OPENAI_ORG_ID: Optional[str] = None
-
+    # LLM settings
+    LLM_PROVIDER: Literal["openai", "mistral"] = "mistral"
+    LLM_MODEL: str = "mistral-medium-latest"
     LLM_TEMPERATURE: PositiveFloat = 0.7
     LLM_MAX_OUTPUT_TOKENS: PositiveInt = 2000
+    # In case the provider is chosen to be `openai`, you can choose a different API base URL
+    LLM_OPENAI_BASEURL: str = "https://api.openai.com/v1"
+    OPENAI_API_KEY: Optional[str] = None
 
     # Mistral AI
     MISTRAL_API_KEY: Optional[str] = None
-    MISTRAL_LLM_MODEL: str = "mistral-medium-latest"
     MISTRAL_EMBEDDING_MODEL: str = "mistral-embed"  # 1024 dimensions
-    # Alternative models for 384 dimensions: "all-MiniLM-L6-v2", "all-mpnet-base-v2"
 
     # Cohere AI
     # If not set, will skip the reranking step
@@ -59,6 +59,8 @@ class Settings(BaseSettings):
     # Vector Database
     VECTOR_DB_TYPE: str = "chromadb"
     CHROMA_PERSIST_DIRECTORY: str = "./data/chroma_db"
+    # Tells Chroma not to send anonymous telemetry data
+    ANONYMIZED_TELEMETRY: bool = False
 
     # RAG Configuration
     RAG_TOP_K: int = 20
@@ -82,14 +84,8 @@ class Settings(BaseSettings):
     CORS_METHODS: List[str] = ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
     CORS_HEADERS: List[str] = ["*"]
 
-    EMBEDDING_MODE: str = "local"
-
-    # Settings for 'openai' embedding mode
-    # You can use a different key for embeddings if needed, otherwise OPENAI_API_KEY will be used
-    OPENAI_EMBEDDING_API_KEY: str = "your-openai-api-key"
-    OPENAI_EMBEDDING_MODEL: str = "text-embedding-3-small"
-    # Optional: specify a different endpoint for OpenAI-compatible APIs
-    OPENAI_EMBEDDING_API_ENDPOINT: str = ""
+    # TODO: implement
+    EMBEDDING_PROVIDER: Literal["local", "mistral"] = "local"
 
     # Mistral embedding uses the hf_token to download the tokenizer. Without it it uses a len()
     # based tokenizer that is not optimized. More can be found here https://github.com/langchain-ai/langchain/issues/20618
