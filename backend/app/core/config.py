@@ -91,6 +91,10 @@ class Settings(BaseSettings):
     # Optional: specify a different endpoint for OpenAI-compatible APIs
     OPENAI_EMBEDDING_API_ENDPOINT: str = ""
 
+    # Mistral embedding uses the hf_token to download the tokenizer. Without it it uses a len()
+    # based tokenizer that is not optimized. More can be found here https://github.com/langchain-ai/langchain/issues/20618
+    HF_TOKEN: Optional[str] = None
+
     class Config:
         env_file = ".env"
         case_sensitive = True
