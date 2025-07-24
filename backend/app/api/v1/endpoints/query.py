@@ -2,9 +2,10 @@
 Query endpoint for RAG-based academic research assistance
 """
 
-from typing import List, Dict, Any, Optional
-from fastapi import APIRouter, HTTPException, Request
+from typing import List, Dict, Any, Optional, AsyncIterator, cast
+from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
+from langchain_core.messages.base import BaseMessageChunk
 from pydantic import BaseModel, Field
 import json
 import asyncio
@@ -174,18 +175,16 @@ async def process_research_query_stream(request: QueryRequest):
             yield f"data: {json.dumps({'type': 'status', 'message': 'Generating response...'})}\n\n"
 
             if top_documents:
-                # Note: This is a simplified streaming approach
-                # For true token-by-token streaming, you'd need to use the LLM's streaming capabilities
-                llm_response: str = await llm_client.generate_rag_response(
-                    user_query=request.query, context_documents=top_documents
+                llm_response_gen: AsyncIterator[BaseMessageChunk] = cast(
+                    AsyncIterator[BaseMessageChunk],
+                    await llm_client.generate_rag_response(
+                        user_query=request.query,
+                        context_documents=top_documents,
+                    ),
                 )
 
-                # Send response in chunks for better UX
-                chunk_size: int = 100
-                for i in range(0, len(llm_response), chunk_size):
-                    chunk: str = llm_response[i : i + chunk_size]
-                    yield f"data: {json.dumps({'type': 'response_chunk', 'chunk': chunk})}\n\n"
-                    await asyncio.sleep(0.05)  # Small delay for streaming effect
+                async for chunk in llm_response_gen:
+                    yield f"data: {json.dumps({'type': 'response_chunk', 'chunk': chunk.content})}\n\n"
 
             else:
                 error_message: str = "I couldn't find relevant academic documents to answer your question. Please try rephrasing your query or being more specific about the research area."
@@ -196,7 +195,7 @@ async def process_research_query_stream(request: QueryRequest):
             yield f"data: {json.dumps({'type': 'complete', 'processing_time': processing_time, 'total_documents': len(unique_documents)})}\n\n"
 
         except Exception as e:
-            logger.error(f"Error in streaming query: {e}")
+            logger.exception(f"Error in streaming query: {e}")
             yield f"data: {json.dumps({'type': 'error', 'message': f'Error processing query: {str(e)}'})}\n\n"
 
     return StreamingResponse(
