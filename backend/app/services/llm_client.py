@@ -9,6 +9,9 @@ from langchain_core.messages import HumanMessage, SystemMessage
 from langchain_core.output_parsers import PydanticOutputParser
 from pydantic import BaseModel, Field
 from app.core.config import settings
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class DatabaseQuery(BaseModel):
@@ -89,6 +92,7 @@ Generate targeted search queries for academic databases that will help find rele
             ]
         except Exception as e:
             # Fallback: return the original query if structured output fails
+            logging.exception(e)
             return [{"query": user_query, "focus": "Original query"}]
 
     async def generate_rag_response(
