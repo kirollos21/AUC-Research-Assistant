@@ -1,60 +1,68 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { Copy } from 'lucide-react';
+import { useState } from "react";
+import { Copy, ChevronDown, ChevronUp } from "lucide-react";
 
 interface CitationPreviewProps {
-  style: 'APA' | 'MLA';
+  style: "APA" | "MLA";
   authors: string;
   title: string;
   year: string;
   source: string;
   url: string;
+  mode?: "light" | "dark";
 }
 
 function formatAuthorsForAPA(authors: string): string {
-  // APA format: Last, Initials - "First Middle Last" -> "Last, F. M."
-  return authors.split(', ').map(author => {
-    const nameParts = author.trim().split(' ');
-    if (nameParts.length === 1) {
-      return nameParts[0]; // Single name, return as is
-    }
-    
-    const lastName = nameParts[nameParts.length - 1];
-    const initials = nameParts.slice(0, -1).map(part => part.charAt(0) + '.').join(' ');
-    return `${lastName}, ${initials}`;
-  }).join(', ');
+  return authors
+    .split(", ")
+    .map((author) => {
+      const nameParts = author.trim().split(" ");
+      if (nameParts.length === 1) return nameParts[0];
+      const lastName = nameParts[nameParts.length - 1];
+      const initials = nameParts
+        .slice(0, -1)
+        .map((part) => part.charAt(0) + ".")
+        .join(" ");
+      return `${lastName}, ${initials}`;
+    })
+    .join(", ");
 }
 
 function formatAuthorsForMLA(authors: string): string {
-  // MLA format: First author "Last, First", other authors "First Last"
-  const authorList = authors.split(', ');
-  if (authorList.length === 0) return '';
+  const authorList = authors.split(", ");
+  if (authorList.length === 0) return "";
   if (authorList.length === 1) return authorList[0];
-  
+
   const firstAuthor = authorList[0];
   const otherAuthors = authorList.slice(1);
-  
-  // Format first author as "Last, First"
-  const firstAuthorParts = firstAuthor.trim().split(' ');
-  const firstAuthorFormatted = firstAuthorParts.length > 1 
-    ? `${firstAuthorParts[firstAuthorParts.length - 1]}, ${firstAuthorParts.slice(0, -1).join(' ')}`
-    : firstAuthor;
-  
-  // Other authors remain as "First Last"
-  const otherAuthorsFormatted = otherAuthors.join(', ');
-  
-  return `${firstAuthorFormatted}, ${otherAuthorsFormatted}`;
+  const parts = firstAuthor.trim().split(" ");
+  const formattedFirst =
+    parts.length > 1
+      ? `${parts[parts.length - 1]}, ${parts.slice(0, -1).join(" ")}`
+      : firstAuthor;
+
+  return `${formattedFirst}, ${otherAuthors.join(", ")}`;
 }
 
-function formatAPA(authors: string, title: string, year: string, source: string, url: string) {
-  // APA format: Author, A. A., Author, B. B., & Author, C. C. (Year). Title of work. Source. URL
+function formatAPA(
+  authors: string,
+  title: string,
+  year: string,
+  source: string,
+  url: string
+) {
   const apaAuthors = formatAuthorsForAPA(authors);
   return `${apaAuthors} (${year}). ${title}. ${source}. ${url}`;
 }
 
-function formatMLA(authors: string, title: string, year: string, source: string, url: string) {
-  // MLA format: Author, A. A., Author, B. B., and Author, C. C. "Title of Work." Source, Year, URL.
+function formatMLA(
+  authors: string,
+  title: string,
+  year: string,
+  source: string,
+  url: string
+) {
   const mlaAuthors = formatAuthorsForMLA(authors);
   return `${mlaAuthors}. "${title}." ${source}, ${year}, ${url}.`;
 }
@@ -66,12 +74,15 @@ export default function CitationPreview({
   year,
   source,
   url,
+  mode = "light", // default to light
 }: CitationPreviewProps) {
-  const text = style === 'APA'
-    ? formatAPA(authors, title, year, source, url)
-    : formatMLA(authors, title, year, source, url);
+  const text =
+    style === "APA"
+      ? formatAPA(authors, title, year, source, url)
+      : formatMLA(authors, title, year, source, url);
 
   const [copied, setCopied] = useState(false);
+  const [isOpen, setIsOpen] = useState(false);
 
   const handleCopy = () => {
     navigator.clipboard.writeText(text);
@@ -79,16 +90,40 @@ export default function CitationPreview({
     setTimeout(() => setCopied(false), 1500);
   };
 
+  const bgColor = mode === "dark" ? "bg-gray-800" : "bg-white";
+  const borderColor = mode === "dark" ? "border-gray-700" : "border-gray-200";
+  const textColor = mode === "dark" ? "text-white" : "text-gray-900";
+  const citationTextColor = mode === "dark" ? "text-gray-300" : "text-gray-700";
+  const hoverCopyBg =
+    mode === "dark" ? "hover:bg-gray-700" : "hover:bg-gray-200";
+  const iconColor = mode === "dark" ? "text-gray-300" : "text-gray-600";
+  const copiedColor = mode === "dark" ? "text-green-400" : "text-green-600";
+
   return (
-    <div className="mt-4 p-4 bg-gray-50 rounded-lg border border-gray-200 flex items-start space-x-2">
-      <div className="flex-1">
-        <span className="font-medium">Citation ({style}):</span>
-        <p className="text-sm text-gray-700 mt-1">{text}</p>
+    <div className={`mt-4 p-4 rounded-lg border ${bgColor} ${borderColor}`}>
+      {/* Header */}
+      <div
+        className={`flex justify-between items-center cursor-pointer ${textColor}`}
+        onClick={() => setIsOpen(!isOpen)}
+      >
+        <span className="font-medium">Citation ({style})</span>
+        {isOpen ? (
+          <ChevronUp className={`w-4 h-4 ${iconColor}`} />
+        ) : (
+          <ChevronDown className={`w-4 h-4 ${iconColor}`} />
+        )}
       </div>
-      <button onClick={handleCopy} className="p-1 hover:bg-gray-200 rounded">
-        <Copy className="h-5 w-5 text-gray-600" />
-      </button>
-      {copied && <span className="text-sm text-green-600">Copied!</span>}
+
+      {/* Dropdown */}
+      {isOpen && (
+        <div className="mt-2 flex items-start space-x-2">
+          <p className={`text-sm flex-1 ${citationTextColor}`}>{text}</p>
+          <button onClick={handleCopy} className={`p-1 rounded ${hoverCopyBg}`}>
+            <Copy className={`h-5 w-5 ${iconColor}`} />
+          </button>
+          {copied && <span className={`text-sm ${copiedColor}`}>Copied!</span>}
+        </div>
+      )}
     </div>
   );
 }

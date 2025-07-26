@@ -3,14 +3,27 @@
 import { useState } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
-import { Search as SearchIcon, Loader2, ExternalLink, Star } from "lucide-react";
-import CitationPreview from '@/components/CitationPreview';
+import {
+  Search as SearchIcon,
+  Loader2,
+  ExternalLink,
+  Star,
+  Moon,
+  Sun,
+} from "lucide-react";
+import CitationPreview from "@/components/CitationPreview";
 
 interface Document {
   title: string;
@@ -29,10 +42,15 @@ export default function Search() {
   const [documents, setDocuments] = useState<Document[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
-  const [citationStyle, setCitationStyle] = useState<"APA"|"MLA">("APA");
+  const [citationStyle, setCitationStyle] = useState<"APA" | "MLA">("APA");
+  const [isDarkMode, setIsDarkMode] = useState(true);
   const MAX_DOCS = 10;
 
   const API_BASE_URL = "http://127.0.0.1:8000/api/v1/query/stream";
+
+  const toggleTheme = () => {
+    setIsDarkMode(!isDarkMode);
+  };
 
   const handleSearch = async (options: any = {}) => {
     if (!query.trim()) return;
@@ -81,15 +99,14 @@ export default function Search() {
               break;
 
             case "documents":
-              setDocuments(prev => [...prev, ...data.documents]);
+              setDocuments((prev) => [...prev, ...data.documents]);
               break;
 
             case "response_chunk":
-              setResponse(prev => prev + data.chunk);
+              setResponse((prev) => prev + data.chunk);
               break;
 
             case "complete":
-              // stop showing "Generating response…"
               setStatus("");
               doneReading = true;
               break;
@@ -108,43 +125,117 @@ export default function Search() {
       console.error(err);
       setError("An error occurred with the connection.");
     } finally {
-      // always hide spinner
       setIsLoading(false);
     }
   };
 
+  const themeClasses = isDarkMode
+    ? {
+        background: "bg-slate-950",
+        cardBg: "bg-slate-900/90",
+        cardBorder: "border-slate-700/50",
+        text: "text-slate-100",
+        textSecondary: "text-slate-300",
+        textMuted: "text-slate-400",
+        inputBg: "bg-slate-800",
+        inputBorder: "border-slate-600",
+        buttonBg: "bg-blue-600 hover:bg-blue-700",
+        tabsBg: "bg-slate-800/60",
+        tabActive: "data-[state=active]:bg-blue-600",
+        errorBg: "bg-red-950/50 border-red-800/50",
+        errorText: "text-red-300",
+        statusBg: "bg-blue-950/50 border-blue-800/50",
+        statusText: "text-blue-300",
+        scoreBadge: "bg-blue-600/20 text-blue-300 border-blue-500/30",
+        journalBadge:
+          "border-emerald-500/30 text-emerald-300 bg-emerald-500/10",
+      }
+    : {
+        background: "bg-gray-50",
+        cardBg: "bg-white",
+        cardBorder: "border-gray-200",
+        text: "text-gray-900",
+        textSecondary: "text-gray-700",
+        textMuted: "text-gray-500",
+        inputBg: "bg-white",
+        inputBorder: "border-gray-300",
+        buttonBg: "bg-blue-600 hover:bg-blue-700",
+        tabsBg: "bg-gray-100",
+        tabActive:
+          "data-[state=active]:bg-blue-600 data-[state=active]:text-white",
+        // aiCardBg: "bg-blue-50",
+        // aiCardBorder: "border-blue-200",
+        errorBg: "bg-red-50 border-red-200",
+        errorText: "text-red-700",
+        statusBg: "bg-blue-50 border-blue-200",
+        statusText: "text-blue-700",
+        scoreBadge: "bg-blue-100 text-blue-700 border-blue-300",
+        journalBadge: "border-emerald-300 text-emerald-700 bg-emerald-50",
+      };
+
   return (
-    <div className="min-h-screen bg-background p-4">
-      <div className="mx-auto max-w-6xl space-y-6">
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle className="text-3xl font-bold">
+    <div
+      className={`min-h-screen ${themeClasses.background} p-4 transition-colors duration-300`}
+    >
+      <div className="relative z-10 mx-auto max-w-7xl space-y-6">
+        {/* Header Card */}
+        <Card
+          className={`${themeClasses.cardBg} ${themeClasses.cardBorder} shadow-lg`}
+        >
+          <CardHeader className="text-center py-8 relative">
+            {/* Theme Toggle Button */}
+            <Button
+              onClick={toggleTheme}
+              // variant="outline"
+              size="sm"
+              variant="default"
+              className={`absolute top-4 right-4 border  ${
+                isDarkMode
+                  ? "border-white text-white hover:bg-white/10"
+                  : themeClasses.cardBorder
+              }`}
+            >
+              {isDarkMode ? (
+                <Sun className="h-4 w-4 text-white" />
+              ) : (
+                <Moon className="h-4 w-4" />
+              )}
+            </Button>
+
+            <CardTitle className={`text-4xl font-bold ${themeClasses.text}`}>
               Academic Research Assistant
             </CardTitle>
-            <CardDescription className="text-lg">
+            <CardDescription
+              className={`text-lg ${themeClasses.textSecondary} mt-2`}
+            >
               Your AI-powered research partner
             </CardDescription>
           </CardHeader>
         </Card>
 
-        <Card>
-          <CardContent className="pt-6">
-            <div className="flex space-x-2">
+        {/* Search Card */}
+        <Card
+          className={`${themeClasses.cardBg} ${themeClasses.cardBorder} shadow-lg hover:shadow-xl transition-all duration-300`}
+        >
+          <CardContent className="pt-8 pb-6">
+            <div className="flex space-x-3">
               <div className="relative flex-1">
-                <SearchIcon className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <SearchIcon
+                  className={`absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-blue-500`}
+                />
                 <Input
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
                   placeholder="Enter your research query..."
-                  className="pl-10"
+                  className={`pl-12 h-12 ${themeClasses.inputBg} ${themeClasses.inputBorder} ${themeClasses.text} placeholder:${themeClasses.textMuted} focus:border-blue-500 focus:ring-blue-500/20 text-base`}
                   onKeyPress={(e) => e.key === "Enter" && handleSearch()}
                 />
               </div>
               <Button
                 onClick={() => handleSearch()}
                 disabled={isLoading}
-                className="min-w-[120px]"
+                className={`min-w-[140px] h-12 ${themeClasses.buttonBg} text-white font-semibold shadow-lg transition-all duration-300`}
               >
                 {isLoading ? (
                   <>
@@ -161,131 +252,218 @@ export default function Search() {
             </div>
 
             {error && (
-              <div className="mt-4 rounded-md bg-destructive/10 p-4">
-                <p className="text-sm text-destructive">{error}</p>
+              <div className={`mt-4 rounded-lg ${themeClasses.errorBg} p-4`}>
+                <p className={`text-sm ${themeClasses.errorText}`}>{error}</p>
               </div>
             )}
 
             {status && (
-              <div className="mt-4 rounded-md bg-muted p-4">
-                <p className="text-sm text-muted-foreground">{status}</p>
+              <div className={`mt-4 rounded-lg ${themeClasses.statusBg} p-4`}>
+                <p
+                  className={`text-sm ${themeClasses.statusText} flex items-center`}
+                >
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  {status}
+                </p>
               </div>
             )}
           </CardContent>
         </Card>
 
         {(response || documents.length > 0) && (
-          <Tabs defaultValue="response" className="w-full">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="response">AI Response</TabsTrigger>
-              <TabsTrigger value="documents">
-                Documents ({Math.min(documents.length, MAX_DOCS)})
-              </TabsTrigger>
-              {/* ► This is your dropdown slot */}
-              <div className="flex items-center justify-end space-x-2">
-                <label className="text-gray-500">Citation style:</label>
-                <select
-                  value={citationStyle}
-                  onChange={e => setCitationStyle(e.target.value as "APA"|"MLA")}
-                  className="border border-gray-300 rounded px-2 py-1 focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+          <div className="space-y-4">
+            {/* Tab header with citation dropdown */}
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
+              <Tabs defaultValue="response" className="flex-1">
+                <TabsList
+                  className={`${themeClasses.tabsBg} ${themeClasses.cardBorder} p-1 h-auto`}
                 >
-                  <option value="APA">APA</option>
-                  <option value="MLA">MLA</option>
-                </select>
-              </div>
-            </TabsList>
+                  <TabsTrigger
+                    value="response"
+                    className={`${themeClasses.tabActive} ${themeClasses.textSecondary} px-6 py-3 font-medium transition-all duration-200`}
+                  >
+                    🤖 AI Response
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="documents"
+                    className={`${themeClasses.tabActive} ${themeClasses.textSecondary} px-6 py-3 font-medium transition-all duration-200`}
+                  >
+                    📄 Documents ({Math.min(documents.length, MAX_DOCS)})
+                  </TabsTrigger>
+                </TabsList>
 
-            <TabsContent value="response" className="space-y-4">
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center space-x-2">
-                    <Star className="h-5 w-5" />
-                    <span>AI Analysis</span>
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {response ? (
-                    <div className="prose max-w-none">
-                      <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {response}
-                      </ReactMarkdown>
-                    </div>
-                  ) : (
-                    <p className="text-muted-foreground">No response yet...</p>
-                  )}
-                  {isLoading && (
-                    <div className="mt-4 flex items-center space-x-2">
-                      <Loader2 className="h-4 w-4 animate-spin" />
-                      <span className="text-sm">Generating response...</span>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            </TabsContent>
+                {/* Citation Style Dropdown */}
+                <div className="flex items-center space-x-3 mt-4">
+                  <span
+                    className={`${themeClasses.textMuted} text-sm font-medium`}
+                  >
+                    Citation style:
+                  </span>
+                  <select
+                    value={citationStyle}
+                    onChange={(e) =>
+                      setCitationStyle(e.target.value as "APA" | "MLA")
+                    }
+                    className={`${themeClasses.inputBg} ${themeClasses.inputBorder} rounded-lg px-3 py-2 ${themeClasses.text} text-sm focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500`}
+                  >
+                    <option value="APA">APA</option>
+                    <option value="MLA">MLA</option>
+                  </select>
+                </div>
 
-            <TabsContent value="documents" className="space-y-4">
-              {documents.length > 0 ? (
-                documents.map((doc, index) => (
-                  <Card key={index}>
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <CardTitle className="text-lg leading-tight">
-                          <a
-                            href={doc.url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="hover:underline"
-                          >
-                            {doc.title}
-                          </a>
-                        </CardTitle>
-                        <div className="flex items-center space-x-2">
-                          <Badge variant="secondary">
-                            Score: {doc.score.toFixed(2)}
-                          </Badge>
-                          <Button variant="outline" size="sm" asChild>
-                            <a
-                              href={doc.url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                            >
-                              <ExternalLink className="h-3 w-3" />
-                            </a>
-                          </Button>
-                        </div>
-                      </div>
-                      <div className="flex flex-wrap gap-2 text-sm text-muted-foreground">
-                        <span><strong>Authors:</strong> {doc.authors}</span>
-                        <Separator orientation="vertical" className="h-4" />
-                        <span><strong>Year:</strong> {doc.year}</span>
-                        <Separator orientation="vertical" className="h-4" />
-                        <Badge variant="outline">{doc.source}</Badge>
-                      </div>
+                {/* Tab Contents */}
+                <TabsContent value="response" className="space-y-4 mt-6">
+                  <Card
+                    className={`${themeClasses.cardBg} ${themeClasses.cardBorder} shadow-lg`}
+                  >
+                    <CardHeader
+                      className={`${themeClasses.cardBorder} border-b`}
+                    >
+                      <CardTitle
+                        className={`flex items-center space-x-3 text-blue-600`}
+                      >
+                        <Star className="h-5 w-5" />
+                        <span>AI Analysis</span>
+                      </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <p className="leading-relaxed">{doc.abstract}</p>
+                    <CardContent className="pt-6">
+                      {response ? (
+                        <div
+                          className={`prose ${
+                            isDarkMode ? "prose-invert" : ""
+                          } prose-blue max-w-none ${
+                            themeClasses.textSecondary
+                          }`}
+                        >
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {response}
+                          </ReactMarkdown>
+                        </div>
+                      ) : (
+                        <p className={themeClasses.textMuted}>
+                          No response yet...
+                        </p>
+                      )}
+                      {isLoading && (
+                        <div className="mt-4 flex items-center space-x-2">
+                          <Loader2 className="h-4 w-4 animate-spin text-blue-500" />
+                          <span className="text-sm text-blue-600">
+                            Generating response...
+                          </span>
+                        </div>
+                      )}
                     </CardContent>
-
-                    {/* ← CITATION PREVIEW */}
-                    <CitationPreview
-                      authors={doc.authors}
-                      title={doc.title}
-                      year={doc.year || 'n.d.'}
-                      source={doc.source}
-                      url={doc.url}
-                      style={citationStyle}
-                    />
                   </Card>
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="pt-6">
-                    <p className="text-center text-muted-foreground">No documents found yet...</p>
-                  </CardContent>
-                </Card>
-              )}
-            </TabsContent>
-          </Tabs>
+                </TabsContent>
+
+                <TabsContent value="documents" className="space-y-4 mt-6">
+                  {documents.length > 0 ? (
+                    documents.map((doc, index) => (
+                      <Card
+                        key={index}
+                        className={`${themeClasses.cardBg} ${themeClasses.cardBorder} shadow-lg hover:shadow-xl hover:border-blue-300 transition-all duration-300 group`}
+                      >
+                        <CardHeader className="pb-4">
+                          <div className="flex items-start justify-between gap-4">
+                            <CardTitle
+                              className={`text-lg leading-tight ${themeClasses.text} group-hover:text-blue-600 transition-colors`}
+                            >
+                              <a
+                                href={doc.url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="hover:underline"
+                              >
+                                {doc.title}
+                              </a>
+                            </CardTitle>
+                            <div className="flex items-center space-x-2 flex-shrink-0">
+                              <Badge
+                                className={`${themeClasses.scoreBadge} hover:bg-blue-600/30`}
+                              >
+                                Score: {doc.score.toFixed(2)}
+                              </Badge>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                asChild
+                                className={`${themeClasses.cardBorder} hover:border-blue-500 hover:bg-blue-500/10`}
+                              >
+                                <a
+                                  href={doc.url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                >
+                                  <ExternalLink
+                                    className={`h-3 w-3 ${themeClasses.textMuted}`}
+                                  />
+                                </a>
+                              </Button>
+                            </div>
+                          </div>
+                          <div
+                            className={`flex flex-wrap gap-3 text-sm ${themeClasses.textMuted} mt-3`}
+                          >
+                            <span>
+                              <strong className={themeClasses.textSecondary}>
+                                Authors:
+                              </strong>{" "}
+                              {doc.authors}
+                            </span>
+                            <Separator
+                              orientation="vertical"
+                              className={`h-4 ${
+                                isDarkMode ? "bg-slate-600" : "bg-gray-300"
+                              }`}
+                            />
+                            <span>
+                              <strong className={themeClasses.textSecondary}>
+                                Year:
+                              </strong>{" "}
+                              {doc.year}
+                            </span>
+                            <Badge
+                              variant="outline"
+                              className={themeClasses.journalBadge}
+                            >
+                              {doc.source}
+                            </Badge>
+                          </div>
+                        </CardHeader>
+                        <CardContent className="pt-0">
+                          <p
+                            className={`leading-relaxed ${themeClasses.textSecondary}`}
+                          >
+                            {doc.abstract}
+                          </p>
+                        </CardContent>
+
+                        <CitationPreview
+                          authors={doc.authors}
+                          title={doc.title}
+                          year={doc.year || "n.d."}
+                          source={doc.source}
+                          url={doc.url}
+                          style={citationStyle}
+                          mode={isDarkMode ? "dark" : "light"}
+                        />
+                      </Card>
+                    ))
+                  ) : (
+                    <Card
+                      className={`${themeClasses.cardBg} ${themeClasses.cardBorder} shadow-lg`}
+                    >
+                      <CardContent className="pt-6">
+                        <p className={`text-center ${themeClasses.textMuted}`}>
+                          No documents found yet...
+                        </p>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+              </Tabs>
+            </div>
+          </div>
         )}
       </div>
     </div>
