@@ -46,6 +46,16 @@ An AI-powered research assistant platform that helps researchers discover, analy
 - **Authentication**: Local storage-based user management
 - **Routing**: Next.js App Router with dynamic pages
 
+### Mobile App (React Native/Expo)
+- **Framework**: React Native with Expo SDK
+- **Language**: TypeScript for type safety
+- **UI Library**: React Native Paper for Material Design
+- **Navigation**: React Navigation for screen management
+- **State Management**: React Hooks and Context API
+- **Platform Support**: iOS, Android, and Web
+- **Development**: Expo CLI for rapid development
+- **Styling**: React Native Paper theming system
+
 ### Infrastructure
 - **Containerization**: Docker Compose with PostgreSQL and Redis
 - **Caching**: Redis for session management and caching
@@ -79,6 +89,15 @@ AUC-Research-Assistant/
 │   ├── public/              # Static assets (logos, images)
 │   ├── package.json         # Node.js dependencies
 │   └── next.config.ts       # Next.js configuration
+├── ResearchAssistantMobile/  # React Native mobile application
+│   ├── src/
+│   │   ├── components/       # Reusable UI components
+│   │   ├── screens/         # Screen components
+│   │   ├── services/        # API and business logic
+│   │   └── types/           # TypeScript type definitions
+│   ├── App.tsx              # Main app component
+│   ├── package.json         # Dependencies and scripts
+│   └── app.json             # Expo configuration
 ├── docker/                   # Docker configuration files
 │   └── docker-compose.yml   # Multi-service container setup
 ├── docs/                    # Project documentation
@@ -92,6 +111,12 @@ AUC-Research-Assistant/
 - **Node.js 18+** with npm
 - **Docker & Docker Compose** (for full deployment)
 - **Git** for version control
+
+### Mobile App Prerequisites (Optional)
+- **Expo CLI**: `npm install -g @expo/cli`
+- **Android Studio** (for Android development)
+- **Xcode** (for iOS development, macOS only)
+- **Expo Go app** (for testing on physical devices)
 
 ### Option 1: Development Setup (Recommended)
 
@@ -134,13 +159,31 @@ npm install
 npm run dev
 ```
 
-#### 4. Access the Application
+#### 4. Mobile App Setup (Optional)
+```bash
+# Open new terminal and navigate to mobile app directory
+cd ResearchAssistantMobile
+
+# Install dependencies
+npm install
+
+# Start the development server
+npm start
+
+# Run on specific platform
+npm run android    # For Android
+npm run ios        # For iOS (macOS only)
+npm run web        # For web browser
+```
+
+#### 5. Access the Application
 - **Frontend**: http://localhost:3000
 - **Login Page**: http://localhost:3000/login
 - **Signup Page**: http://localhost:3000/signup
 - **Admin Panel**: http://localhost:3000/admin
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
+- **Mobile App**: Expo Go app or web browser
 
 ### Option 2: Docker Deployment (Production Ready)
 
@@ -270,6 +313,16 @@ npm run build
 - **Real-time Updates**: Live database status and search results
 - **Accessibility**: WCAG compliant with keyboard navigation
 - **Loading States**: Beautiful animations and skeleton screens
+
+### 📱 **Mobile App Features**
+- **Cross-Platform**: iOS, Android, and Web support with React Native
+- **Native Performance**: Optimized for mobile devices with smooth animations
+- **Material Design**: Consistent UI with React Native Paper components
+- **Real-time Search**: Streaming responses with live updates
+- **Citation Management**: Generate and copy citations in APA/MLA formats
+- **Theme Support**: Automatic dark/light mode based on system preferences
+- **Offline Capability**: Basic offline functionality for viewing cached results
+- **Touch-Optimized**: Mobile-first design with gesture support
 
 ### 🛡️ **Database Monitoring**
 - **Health Checks**: Real-time monitoring of all database connectors
@@ -490,6 +543,22 @@ npx tsc --noEmit
 
 # API connection issues
 # Check NEXT_PUBLIC_API_BASE_URL in .env.local
+```
+
+#### Mobile App Issues
+```bash
+# Metro cache issues
+npx expo start --clear
+
+# Build errors
+rm -rf node_modules && npm install
+
+# iOS simulator issues
+# Reset simulator: Device → Erase All Content and Settings
+
+# Backend connection issues
+# Ensure backend is running on http://127.0.0.1:8000
+# Check CORS settings for mobile app URLs
 ```
 
 #### Docker Issues
