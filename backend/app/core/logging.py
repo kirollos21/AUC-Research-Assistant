@@ -22,6 +22,9 @@ def setup_logging() -> None:
     # Configure root logger
     root_logger = logging.getLogger()
     root_logger.setLevel(getattr(logging, settings.LOG_LEVEL.upper()))
+
+    # Delete default/other handlers so logging doesn't output multiple times
+    root_logger.handlers.clear()
     root_logger.addHandler(console_handler)
 
     # Configure specific loggers
