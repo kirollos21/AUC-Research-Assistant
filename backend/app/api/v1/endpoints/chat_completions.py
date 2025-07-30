@@ -558,7 +558,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 system_fingerprint=system_fingerprint,
             )
             yield f"data: {error_chunk.model_dump_json()}\n\n"
-            # yield "data: [DONE]\n\n"
+            yield "data: [DONE]\n\n"
             logger.error("Chat completion stream ended with error")
 
     return StreamingResponse(
