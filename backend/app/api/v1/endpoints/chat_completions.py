@@ -2,6 +2,7 @@
 OpenAI-compatible chat completions endpoint
 
 NOTE: this module still needs some testing.
+TODO: ask for clarifications and language choice on first prompt, and do not generate search queries until the second prompt
 """
 
 import asyncio
@@ -15,7 +16,7 @@ from typing import Any, AsyncIterator, Dict, List, Optional, cast
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages.base import BaseMessageChunk
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PositiveInt
 
 from app.core.config import settings
 from app.schemas.search import FederatedSearchResponse, SearchQuery, SearchResult
@@ -472,15 +473,14 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 logger.debug("Sent response generation start event")
 
             if top_documents:
-                llm_response_gen: AsyncIterator[BaseMessageChunk] = cast(
-                    AsyncIterator[BaseMessageChunk],
-                    await llm_client.generate_rag_response(
-                        user_query=user_query,
-                        context_documents=top_documents,
-                    ),
+                llm_response_gen: AsyncIterator[
+                    BaseMessageChunk
+                ] = await llm_client.generate_rag_response(
+                    user_query=user_query,
+                    context_documents=top_documents,
                 )
 
-                chunk_count = 0
+                chunk_count: PositiveInt = 0
                 async for chunk in llm_response_gen:
                     chunk_count += 1
                     chunk_data = ChatCompletionChunk(
@@ -504,7 +504,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
                     f"Step 5 completed: Generated response with {chunk_count} chunks"
                 )
 
-            else:
+            else:  # if not top_documents
                 logger.warning("Step 5: No documents found, sending fallback message")
                 error_message: str = "I couldn't find relevant academic documents to answer your question. Please try rephrasing your query or being more specific about the research area."
                 chunk_data = ChatCompletionChunk(
