@@ -164,7 +164,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 ],
                 system_fingerprint=system_fingerprint,
             )
-            yield f"data: {initial_chunk.model_dump_json()}"
+            yield f"data: {initial_chunk.model_dump_json()}\n\n"
 
             logger.debug("Sent initial assistant message chunk")
 
