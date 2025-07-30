@@ -14,6 +14,7 @@ from datetime import datetime
 from app.core.config import settings
 from app.core.logging import setup_logging
 from app.api.v1.router import api_router
+from app.api.v1.endpoints import chat_completions
 
 
 @asynccontextmanager
@@ -96,6 +97,7 @@ async def detailed_health_check():
 
 # Include API routes
 app.include_router(api_router, prefix="/api/v1")
+app.include_router(chat_completions.router, prefix="/v1", tags=["chat"])
 
 
 @app.exception_handler(404)
