@@ -76,7 +76,9 @@ class Settings(BaseSettings):
 
     # Logging
     LOG_LEVEL: str = "INFO"
-    LOG_FORMAT: str = "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+    LOG_FORMAT: str = "{asctime} [{levelname}] {name}: {message}"
+    # Default will be True if running in a TTY and not on Windows
+    LOG_USE_COLORED_OUTPUT: Literal[True, False, "Default"] = "Default"
 
     # CORS
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://127.0.0.1:3000"]
