@@ -21,7 +21,7 @@ def setup_logging() -> None:
 
     # Configure root logger
     root_logger = logging.getLogger()
-    root_logger.setLevel(getattr(logging, settings.LOG_LEVEL.upper()))
+    root_logger.setLevel("INFO")
 
     # Delete default/other handlers so logging doesn't output multiple times
     root_logger.handlers.clear()
@@ -35,6 +35,7 @@ def setup_logging() -> None:
         "fastapi": {"level": "INFO"},
         "sqlalchemy": {"level": "WARNING"},
         "httpx": {"level": "WARNING"},
+        "app": {"level": settings.LOG_LEVEL.upper()},
     }
 
     for logger_name, config in loggers_config.items():
