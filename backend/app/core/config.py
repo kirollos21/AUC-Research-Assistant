@@ -75,7 +75,7 @@ class Settings(BaseSettings):
     ALLOWED_EXTENSIONS: List[str] = ["pdf", "txt", "docx", "xlsx", "csv"]
 
     # Logging
-    LOG_LEVEL: str = "INFO"
+    LOG_LEVEL: str = "DEBUG"
     LOG_FORMAT: str = "{asctime} [{levelname}] {name}: {message}"
     # Default will be True if running in a TTY and not on Windows
     LOG_USE_COLORED_OUTPUT: Literal[True, False, "Default"] = "Default"
