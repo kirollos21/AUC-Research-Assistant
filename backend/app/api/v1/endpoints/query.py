@@ -236,7 +236,7 @@ async def health_check():
                 else "unavailable",
             },
             "config": {
-                "llm_model": settings.MISTRAL_LLM_MODEL,
+                "llm_model": settings.LLM_MODEL,
                 "embedding_model": settings.MISTRAL_EMBEDDING_MODEL,
                 "cohere_rerank_model": settings.COHERE_RERANK_MODEL,
                 "top_k": settings.RAG_TOP_K,
