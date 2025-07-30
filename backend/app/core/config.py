@@ -56,6 +56,15 @@ class Settings(BaseSettings):
     # If not set, will proceed without API key (higher rate limits apply)
     SEMANTIC_SCHOLAR_API_KEY: Optional[str] = None
 
+    # Search Rate Limiting (requests per minute)
+    # Set to 0.0 to disable rate limiting for that API
+    # Example: 0.2 = 1 request per 5 minutes
+    # TODO: switch type to positivefloat project-wide
+    ARXIV_RATE_LIMIT_REQUESTS_PER_MINUTE: float = 10.0
+    SEMANTIC_SCHOLAR_RATE_LIMIT_REQUESTS_PER_MINUTE: float = 30.0
+    # In seconds. Note that this is in addition to the rate limiting
+    SEARCH_TIMEOUT: PositiveFloat = 30.0
+
     # Vector Database
     VECTOR_DB_TYPE: str = "chromadb"
     CHROMA_PERSIST_DIRECTORY: str = "./data/chroma_db"
