@@ -2,10 +2,11 @@
 
 An AI-powered research assistant platform that helps researchers discover, analyze, and synthesize academic papers and research materials with federated search across academic databases.
 
-## 🚀 **Project Status: Under development
+## 🚀 **Project Status: Production Ready**
 
 - ✅ **Core Backend**: FastAPI with comprehensive API endpoints and database connectors
-- ✅ **Frontend**: Modern Next.js 15 application with TypeScript and Tailwind CSS
+- ✅ **Frontend**: Modern Next.js 15 application with TypeScript and Tailwind CSS v4
+- ✅ **Mobile App**: React Native with Expo SDK for cross-platform support
 - ✅ **Database Integration**: ArXiv connector fully functional with real-time search
 - ✅ **AI/ML Components**: LLM integration, embeddings, and semantic search capabilities
 - ✅ **Authentication System**: Complete user registration, login, and session management
@@ -24,21 +25,29 @@ An AI-powered research assistant platform that helps researchers discover, analy
 │   TypeScript    │    │   Python 3.10+  │    │   PostgreSQL    │
 │   Tailwind CSS  │    │   Pydantic v2   │    │   Redis         │
 └─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Mobile App    │    │   AI/ML         │    │   Vector DB     │
+│   (React Native)│    │   Services      │    │   (ChromaDB)    │
+│   Expo SDK      │    │   (OpenAI, etc.)│    │   Embeddings    │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
 ```
 
 ## 🛠️ **Technology Stack**
 
 ### Backend (Python/FastAPI)
 - **Framework**: FastAPI 0.104.1 with async/await support
-- **Validation**: Pydantic v2 for robust data validation
-- **Database**: SQLAlchemy 2.0 with PostgreSQL support
-- **AI/ML**: OpenAI API, Sentence Transformers, ChromaDB
-- **Testing**: Pytest with comprehensive test coverage
+- **Validation**: Pydantic v2.5.0 for robust data validation
+- **Database**: SQLAlchemy 2.0.23 with PostgreSQL support
+- **AI/ML**: OpenAI API, Sentence Transformers 2.2.2, ChromaDB 0.4.18
+- **Academic APIs**: ArXiv 1.4.8, BioPython 1.82, PyAlex 0.13
+- **Testing**: Pytest 7.4.3 with comprehensive test coverage
 - **Documentation**: Automatic OpenAPI/Swagger generation
 
 ### Frontend (Next.js/React)
-- **Framework**: Next.js 15 with App Router
-- **Language**: TypeScript for type safety
+- **Framework**: Next.js 15.3.3 with App Router
+- **Language**: TypeScript 5.x for type safety
 - **Styling**: Tailwind CSS v4 for modern UI
 - **Build System**: Turbopack for fast development
 - **Components**: Radix UI primitives for accessibility
@@ -47,21 +56,20 @@ An AI-powered research assistant platform that helps researchers discover, analy
 - **Routing**: Next.js App Router with dynamic pages
 
 ### Mobile App (React Native/Expo)
-- **Framework**: React Native with Expo SDK
+- **Framework**: React Native 0.79.5 with Expo SDK 53.0.20
 - **Language**: TypeScript for type safety
-- **UI Library**: React Native Paper for Material Design
-- **Navigation**: React Navigation for screen management
-- **State Management**: React Hooks and Context API
+- **UI Library**: React Native Paper 5.14.5 for Material Design
+- **Navigation**: React Navigation 6.1.9 for screen management
 - **Platform Support**: iOS, Android, and Web
 - **Development**: Expo CLI for rapid development
 - **Styling**: React Native Paper theming system
 
 ### Infrastructure
-- **Containerization**: Docker Compose with PostgreSQL and Redis
+- **Containerization**: Docker Compose with PostgreSQL 15 and Redis 7
 - **Caching**: Redis for session management and caching
 - **Database**: PostgreSQL for persistent data storage
 - **Vector Database**: ChromaDB for semantic search
-- **Task Queue**: Celery for background processing
+- **Task Queue**: Celery 5.3.4 for background processing
 
 ## 📁 **Project Structure**
 
@@ -70,38 +78,78 @@ AUC-Research-Assistant/
 ├── backend/                    # FastAPI backend application
 │   ├── app/
 │   │   ├── api/v1/            # API endpoints and routing
+│   │   │   └── endpoints/
+│   │   │       └── query.py   # Search query endpoints
 │   │   ├── core/              # Configuration and logging
+│   │   │   ├── config.py      # Application settings
+│   │   │   └── logging.py     # Logging configuration
 │   │   ├── schemas/           # Pydantic data models
+│   │   │   └── search.py      # Search-related schemas
 │   │   └── services/          # Business logic and external integrations
+│   │       ├── database_connectors/
+│   │       │   ├── arxiv_connector.py      # ArXiv API integration
+│   │       │   ├── semantic_scholar_connector.py  # Semantic Scholar API
+│   │       │   └── base.py    # Base connector class
+│   │       ├── embedding_client.py         # Vector embeddings service
+│   │       ├── federated_search_service.py # Main search orchestration
+│   │       ├── llm_client.py  # OpenAI/LangChain integration
+│   │       └── cohere_reranker.py # Result reranking service
 │   ├── tests/                 # Test suites
 │   ├── main.py               # Application entry point
-│   ├── requirements.txt      # Python dependencies
+│   ├── requirements.txt      # Python dependencies (73 packages)
 │   └── TESTING_REPORT.md     # Detailed testing documentation
 ├── frontend/                  # Next.js frontend application
 │   ├── src/
 │   │   ├── app/              # Next.js App Router pages
 │   │   │   ├── login/        # User login page
 │   │   │   ├── signup/       # User registration page
-│   │   │   └── admin/        # Admin panel for user management
+│   │   │   ├── admin/        # Admin panel for user management
+│   │   │   ├── layout.tsx    # Root layout with header
+│   │   │   ├── page.tsx      # Main application page
+│   │   │   └── globals.css   # Global styles
 │   │   ├── components/       # React components
+│   │   │   ├── Header.tsx    # Navigation header with AUC branding
+│   │   │   ├── Search.tsx    # Main search interface
+│   │   │   ├── SearchResults.tsx # Results display component
+│   │   │   ├── CitationPreview.tsx # Citation management
+│   │   │   ├── DatabaseStatus.tsx # Real-time database health
+│   │   │   ├── ResearchAnalysis.tsx # Analysis dashboard
+│   │   │   ├── ConversationalAssistant.tsx # AI chat interface
+│   │   │   └── ui/           # Reusable UI components
 │   │   ├── lib/             # Utility functions and services
+│   │   │   ├── auth.ts      # Authentication utilities
+│   │   │   └── utils.ts     # General utilities
 │   │   └── types/           # TypeScript type definitions
-│   ├── public/              # Static assets (logos, images)
-│   ├── package.json         # Node.js dependencies
+│   │       └── search.ts    # Search-related types
+│   ├── public/              # Static assets (AUC logos)
+│   ├── package.json         # Node.js dependencies (25 packages)
 │   └── next.config.ts       # Next.js configuration
 ├── ResearchAssistantMobile/  # React Native mobile application
 │   ├── src/
 │   │   ├── components/       # Reusable UI components
+│   │   │   └── CitationPreview.tsx # Mobile citation component
 │   │   ├── screens/         # Screen components
+│   │   │   ├── HomeScreen.tsx # Main search screen
+│   │   │   ├── LoginScreen.tsx # Mobile login interface
+│   │   │   └── SignupScreen.tsx # Mobile registration
 │   │   ├── services/        # API and business logic
-│   │   └── types/           # TypeScript type definitions
+│   │   │   └── api.ts       # Mobile API client
+│   │   ├── types/           # TypeScript type definitions
+│   │   │   └── search.ts    # Search types for mobile
+│   │   └── utils/           # Mobile utilities
+│   │       ├── clipboard.ts # Clipboard functionality
+│   │       ├── platformConstantsPolyfill.js # Platform polyfills
+│   │       └── turboModulePolyfill.js # TurboModule support
 │   ├── App.tsx              # Main app component
-│   ├── package.json         # Dependencies and scripts
+│   ├── package.json         # Dependencies (20 packages)
 │   └── app.json             # Expo configuration
 ├── docker/                   # Docker configuration files
 │   └── docker-compose.yml   # Multi-service container setup
 ├── docs/                    # Project documentation
-└── scripts/                 # Development and deployment scripts
+│   └── ARCHITECTURE.md      # Architecture decision records
+├── scripts/                 # Development and deployment scripts
+│   └── setup.py            # Project setup automation
+└── README.md               # This comprehensive documentation
 ```
 
 ## 🚀 **Quick Start Guide**
@@ -140,8 +188,8 @@ venv\Scripts\activate
 # macOS/Linux:
 source venv/bin/activate
 
-# Install dependencies manually
-pip install fastapi uvicorn pydantic pydantic-settings arxiv httpx openai requests google-generativeai numpy scikit-learn sentence-transformers langchain langchain-mistralai mistralai chromadb langchain-chroma cohere python-dotenv langchain-core langchain-text-splitters langchain-openai
+# Install dependencies (73 packages)
+pip install -r requirements.txt
 
 # Run the development server
 python main.py
@@ -152,10 +200,10 @@ python main.py
 # Open new terminal and navigate to frontend directory
 cd frontend
 
-# Install dependencies
+# Install dependencies (25 packages)
 npm install
 
-# Run the development server
+# Run the development server with Turbopack
 npm run dev
 ```
 
@@ -164,7 +212,7 @@ npm run dev
 # Open new terminal and navigate to mobile app directory
 cd ResearchAssistantMobile
 
-# Install dependencies
+# Install dependencies (20 packages)
 npm install
 
 # Start the development server
@@ -194,17 +242,10 @@ cd docker
 docker-compose up -d
 ```
 
-#### 2. Build and Run Application
-```bash
-# Backend container
-docker build -t auc-research-backend ../backend
-docker run -p 8000:8000 auc-research-backend
-
-# Frontend container
-cd ../frontend
-docker build -t auc-research-frontend .
-docker run -p 3000:3000 auc-research-frontend
-```
+#### 2. Access Services
+- **PostgreSQL**: localhost:5432
+- **Redis**: localhost:6379
+- **pgAdmin**: http://localhost:5050 (admin@auc.edu / admin)
 
 ## 🔧 **Environment Variables**
 
@@ -441,6 +482,13 @@ kubectl apply -f k8s/
 - **Tailwind CSS for consistent styling**
 - **Error handling and user feedback systems**
 
+### 📱 **Mobile App Development**
+- **React Native with Expo SDK 53.0.20**
+- **Cross-platform support (iOS, Android, Web)**
+- **Material Design with React Native Paper**
+- **Navigation with React Navigation**
+- **TypeScript for type safety**
+
 ## 🔧 **Development Guidelines**
 
 ### Code Style
@@ -517,6 +565,13 @@ pip install -r requirements-dev.txt
 - **Form validation**: Real-time error messages and success feedback
 - **Loading states**: Professional animations during form submission
 
+### 📱 **Mobile App Usage**
+1. **Install Expo Go** on your mobile device
+2. **Start the mobile app**: `cd ResearchAssistantMobile && npm start`
+3. **Scan QR code** with Expo Go app
+4. **Use the app** with touch-optimized interface
+5. **Access web version** at the provided URL
+
 ## 🆘 **Troubleshooting**
 
 ### Common Issues
@@ -574,9 +629,46 @@ docker-compose down -v
 docker-compose up -d
 ```
 
+## 📈 **Roadmap**
+
+### Phase 1: Core Features (✅ Complete)
+- [x] Basic search functionality
+- [x] User authentication system
+- [x] Admin panel
+- [x] Mobile app foundation
+- [x] Docker deployment
+
+### Phase 2: Advanced Features (🔄 In Progress)
+- [ ] Additional database connectors (PubMed, CrossRef, DOAJ)
+- [ ] Advanced AI analysis features
+- [ ] Real-time collaboration tools
+- [ ] Advanced mobile features
+
+### Phase 3: Enterprise Features (📋 Planned)
+- [ ] Multi-tenant architecture
+- [ ] Advanced analytics dashboard
+- [ ] API rate limiting and monitoring
+- [ ] Advanced security features
+
 ## 👥 **Team**
 
-- **Kirollos Zikry**
-- **Alyaman Massarani**
-- **Adham Ali**
-- **Eslam Mohamed Tawfik**
+- **Kirollos Zikry** - Backend Development & AI/ML Integration
+- **Alyaman Massarani** - Frontend Development & UI/UX
+- **Adham Ali** - Mobile App Development & Cross-platform
+- **Eslam Mohamed Tawfik** - DevOps & Infrastructure
+
+## 📄 **License**
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## 🙏 **Acknowledgments**
+
+- **AUC (American University in Cairo)** for project support
+- **OpenAI** for AI/ML capabilities
+- **ArXiv** for academic paper access
+- **Next.js** and **React Native** communities for excellent frameworks
+- **FastAPI** team for the high-performance Python framework
+
+---
+
+**Built with ❤️ by the AUC Research Assistant Team**
