@@ -30,7 +30,7 @@ const Header: React.FC = () => {
               <img 
                 src="/auc_logo.png" 
                 alt="AUC Research Assistant Logo" 
-                className="h-20 w-auto"
+                className="h-18 w-auto"
               />
             </Link>
           </div>

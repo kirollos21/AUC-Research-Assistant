@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Academic Research Assistant",
+    "slug": "research-assistant-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.researchassistant.mobile"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.researchassistant.mobile"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "description": "AI-powered academic research assistant for mobile devices"
+  }
+}
