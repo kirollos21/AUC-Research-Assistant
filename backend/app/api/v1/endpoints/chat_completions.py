@@ -2,7 +2,6 @@
 OpenAI-compatible chat completions endpoint
 
 NOTE: this module still needs some testing.
-TODO: ask for clarifications and language choice on first prompt, and do not generate search queries until the second prompt
 """
 
 import asyncio
@@ -23,7 +22,7 @@ from app.schemas.search import FederatedSearchResponse, SearchQuery, SearchResul
 from app.services.cohere_reranker import get_cohere_reranker
 from app.services.embedding_client import get_embedding_client
 from app.services.federated_search_service import FederatedSearchService
-from app.services.llm_client import get_llm_client
+from app.services.llm_client import ChatMessage, get_llm_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -124,12 +123,14 @@ async def create_chat_completion(request: ChatCompletionRequest):
             detail="Non-streaming mode not yet implemented. Please set stream=true",
         )
 
-    # Extract the user query from messages
+    # Extract user messages and determine if this is first message
     user_messages = [msg for msg in request.messages if msg.role == "user"]
     if not user_messages:
         raise HTTPException(status_code=400, detail="No user message found")
 
+    is_first_message = len(user_messages) == 1
     user_query = user_messages[-1].content  # Use the last user message
+    conversation_history = request.messages  # Store entire conversation
 
     async def generate_openai_stream():
         """Generate OpenAI-compatible streaming response"""
@@ -170,7 +171,78 @@ async def create_chat_completion(request: ChatCompletionRequest):
             search_service = FederatedSearchService()
             logger.info("Service initialization completed")
 
-            # Step 1: Generate database queries
+            # Handle first message: ask for clarifications instead of doing search
+            if is_first_message:
+                logger.info("First message detected - generating clarification request")
+
+                if request.stream_events:
+                    event_chunk = ChatCompletionChunk(
+                        id=completion_id,
+                        created=created,
+                        model=request.model,
+                        choices=[
+                            ChatCompletionChoice(
+                                index=0,
+                                delta=ChatMessageDelta(
+                                    content="<event>Analyzing query for clarifications...</event>"
+                                ),
+                                finish_reason=None,
+                            )
+                        ],
+                        system_fingerprint=system_fingerprint,
+                    )
+                    yield f"data: {event_chunk.model_dump_json()}\n\n"
+
+                # Generate streaming clarification response
+                clarification_stream = await llm_client.generate_clarification_request(
+                    user_query
+                )
+                logger.debug(
+                    f"Got clarification_stream object with type {type(clarification_stream)}."
+                )
+
+                chunk_count = 0
+                async for chunk in clarification_stream:
+                    chunk_count += 1
+                    chunk_data = ChatCompletionChunk(
+                        id=completion_id,
+                        created=created,
+                        model=request.model,
+                        choices=[
+                            ChatCompletionChoice(
+                                index=0,
+                                delta=ChatMessageDelta(
+                                    content=cast(str, chunk.content)
+                                ),
+                                finish_reason=None,
+                            )
+                        ],
+                        system_fingerprint=system_fingerprint,
+                    )
+                    yield f"data: {chunk_data.model_dump_json()}\n\n"
+
+                logger.info(
+                    f"Generated clarification response with {chunk_count} chunks"
+                )
+
+                # Send final chunk
+                final_chunk = ChatCompletionChunk(
+                    id=completion_id,
+                    created=created,
+                    model=request.model,
+                    choices=[
+                        ChatCompletionChoice(
+                            index=0, delta=ChatMessageDelta(), finish_reason="stop"
+                        )
+                    ],
+                    system_fingerprint=system_fingerprint,
+                )
+                yield f"data: {final_chunk.model_dump_json()}\n\n"
+                yield "data: [DONE]\n\n"
+                logger.info("First message clarification completed")
+                return
+
+            # Step 1: Generate database queries (pass entire conversation)
             logger.info("Step 1: Starting database query generation")
 
             if request.stream_events:
@@ -194,7 +266,9 @@ async def create_chat_completion(request: ChatCompletionRequest):
 
             database_queries: List[
                 Dict[str, str]
-            ] = await llm_client.generate_database_queries(user_query)
+            ] = await llm_client.generate_database_queries_from_conversation(
+                conversation_history
+            )
             logger.info(
                 f"Step 1 completed: Generated {len(database_queries)} database queries"
             )
@@ -469,8 +543,8 @@ async def create_chat_completion(request: ChatCompletionRequest):
             if top_documents:
                 llm_response_gen: AsyncIterator[
                     BaseMessageChunk
-                ] = await llm_client.generate_rag_response(
-                    user_query=user_query,
+                ] = await llm_client.generate_rag_response_from_conversation(
+                    conversation_history=conversation_history,
                     context_documents=top_documents,
                 )
 
