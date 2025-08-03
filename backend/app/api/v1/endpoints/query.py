@@ -19,11 +19,6 @@ from app.services.federated_search_service import FederatedSearchService
 from app.services.cohere_reranker import get_cohere_reranker
 
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    format="%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S",
-    level=logging.DEBUG,
-)
 router = APIRouter()
 
 
