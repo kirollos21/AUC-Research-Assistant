@@ -2,6 +2,7 @@
 Query endpoint for RAG-based academic research assistance
 """
 
+import warnings
 from typing import List, Dict, Any, Optional, AsyncIterator, cast
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -71,6 +72,11 @@ async def process_research_query_stream(request: QueryRequest):
 
     First sends top-k documents, then streams LLM response
     """
+    warnings.warn(
+        f"process_research_query_stream() in file {__file__} is deprecated and will be removed in a future version. Use create_chat_completion() instead.",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
 
     async def generate_stream():
         """Generate streaming response"""
