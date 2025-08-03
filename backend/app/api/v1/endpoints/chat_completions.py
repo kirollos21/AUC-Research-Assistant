@@ -134,6 +134,13 @@ async def create_chat_completion(request: ChatCompletionRequest):
 
     async def generate_openai_stream():
         """Generate OpenAI-compatible streaming response"""
+        # Note: To make this function easier to navigate, it is divided into the following steps, which can also be found in comments in the code itself:
+        # Step 1: Generate database queries (pass entire conversation)
+        # Step 2: Search databases
+        # Step 3: Process and embed documents
+        # Step 4: Retrieve top-k documents
+        # Step 4.5: Rerank documents using Cohere
+        # Step 5: Generate streaming LLM response
         completion_id = str(uuid.uuid4())
         created = int(time.time())
         system_fingerprint = get_system_fingerprint()
