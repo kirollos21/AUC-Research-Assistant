@@ -125,7 +125,7 @@ class FederatedSearchService:
             return response
 
         except Exception as e:
-            logger.error(f"Federated search error: {e}")
+            logger.exception(f"Federated search error: {e}")
             # Return empty response on error
             return FederatedSearchResponse(
                 query=query.query,
@@ -256,7 +256,8 @@ class FederatedSearchService:
             else:
                 return 0.2
 
-        except:
+        except Exception as e:
+            logger.exception(f"Failed to calculate recency score: {e}")
             return 0.5
 
     def _calculate_citation_score(self, citation_info) -> float:
@@ -279,7 +280,8 @@ class FederatedSearchService:
             else:
                 return 0.2
 
-        except:
+        except Exception as e:
+            logger.exception(f"Failed to calculate citation score: {e}")
             return 0.5
 
     async def get_database_status(self) -> List[DatabaseStatus]:
