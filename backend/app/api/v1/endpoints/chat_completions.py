@@ -18,7 +18,7 @@ from fastapi.responses import StreamingResponse
 from langchain_core.messages.base import BaseMessageChunk
 from pydantic import BaseModel, Field, PositiveInt
 
-from app.core.config import settings
+from app.core.config import SearchEngineName, settings
 from app.schemas.search import FederatedSearchResponse, SearchQuery, SearchResult
 from app.services.cohere_reranker import get_cohere_reranker
 from app.services.embedding_client import get_embedding_client
@@ -27,13 +27,6 @@ from app.services.llm_client import get_llm_client
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
-
-
-class ChatMessage(BaseModel):
-    """OpenAI-compatible message format"""
-
-    role: str = Field(..., description="Role of the message (system, user, assistant)")
-    content: str = Field(..., description="Content of the message")
 
 
 class ChatMessageDelta(BaseModel):
@@ -66,8 +59,9 @@ class ChatCompletionRequest(BaseModel):
     top_k: Optional[int] = Field(
         default=None, description="Number of top documents for RAG"
     )
-    databases: Optional[List[str]] = Field(
-        default=None, description="List of databases to search"
+    databases: Optional[List[SearchEngineName]] = Field(
+        default=settings.ENABLED_SEARCH_ENGINES,
+        description="List of databases to search",
     )
 
 

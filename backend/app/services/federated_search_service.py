@@ -4,10 +4,9 @@ Federated Search Service - Orchestrates searches across multiple academic databa
 
 import asyncio
 import logging
-from typing import List, Dict, Any, Optional
+from typing import Dict, List, Optional
 from datetime import datetime
 import hashlib
-from collections import defaultdict
 
 from app.services.database_connectors.arxiv_connector import ArxivConnector
 from app.services.database_connectors.semantic_scholar_connector import (
@@ -21,6 +20,7 @@ from app.schemas.search import (
     DatabaseStatus,
 )
 from app.services.database_connectors.base import DatabaseConnector
+from app.core.config import SearchEngineName, settings
 
 
 logger = logging.getLogger(__name__)
@@ -30,7 +30,7 @@ class FederatedSearchService:
     """Service for coordinating federated search across academic databases"""
 
     def __init__(self):
-        self.connectors = {
+        self.connectors: Dict[SearchEngineName, DatabaseConnector] = {
             "arxiv": ArxivConnector(),
             "semantic_scholar": SemanticScholarConnector(),
             # Add more connectors as they're implemented
@@ -163,14 +163,14 @@ class FederatedSearchService:
             return []
 
     def _get_databases_to_search(
-        self, requested_databases: Optional[List[str]]
-    ) -> List[str]:
+        self, requested_databases: Optional[List[SearchEngineName]]
+    ) -> List[SearchEngineName]:
         """Determine which databases to search"""
         if not requested_databases:
             # Since semantic scholar has arxiv included in it, it doesn't make
             # sense to include arxiv anymore unless the user explicitly wants
             # it for some reason
-            return ["semantic_scholar"]
+            return settings.ENABLED_SEARCH_ENGINES
 
         # Filter to only available databases
         return [db for db in requested_databases if db in self.available_databases]

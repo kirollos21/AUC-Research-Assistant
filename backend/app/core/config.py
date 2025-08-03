@@ -2,10 +2,13 @@
 Application configuration management
 """
 
-from typing import List, Literal, Optional
+from functools import lru_cache
+from typing import List, Literal, Optional, TypeAlias
+
 from pydantic import PositiveFloat, PositiveInt
 from pydantic_settings import BaseSettings
-from functools import lru_cache
+
+SearchEngineName: TypeAlias = Literal["arxiv", "semantic_scholar"]
 
 
 class Settings(BaseSettings):
@@ -64,6 +67,11 @@ class Settings(BaseSettings):
     SEMANTIC_SCHOLAR_RATE_LIMIT_REQUESTS_PER_MINUTE: float = 30.0
     # In seconds. Note that this is in addition to the rate limiting
     SEARCH_TIMEOUT: PositiveFloat = 30.0
+
+    ENABLED_SEARCH_ENGINES: List[SearchEngineName] = [
+        "arxiv",
+        "semantic_scholar",
+    ]
 
     # Vector Database
     VECTOR_DB_TYPE: str = "chromadb"

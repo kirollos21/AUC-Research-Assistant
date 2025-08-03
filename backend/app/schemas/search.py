@@ -2,17 +2,21 @@
 Pydantic schemas for search functionality
 """
 
-from typing import List, Optional, Dict, Any, Literal
-from pydantic import BaseModel, Field
 from datetime import datetime
+from typing import Any, Dict, List, Literal, Optional
+
+from pydantic import BaseModel, Field
+
+from app.core.config import SearchEngineName, settings
 
 
 class SearchQuery(BaseModel):
     """Search query request schema"""
 
     query: str = Field(..., description="Main search query")
-    databases: Optional[List[str]] = Field(
-        default=None, description="List of databases to search"
+    databases: Optional[List[SearchEngineName]] = Field(
+        default=settings.ENABLED_SEARCH_ENGINES,
+        description="List of databases to search",
     )
     max_results: int = Field(
         default=20, ge=1, le=100, description="Maximum results per database"
