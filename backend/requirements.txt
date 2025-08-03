@@ -28,6 +28,7 @@ chromadb==0.4.18
 sentence-transformers==2.2.2
 transformers==4.36.0
 torch==2.2.0
+langchain-mistralai==0.1.0
 
 # Academic APIs and federated search
 arxiv==1.4.8
