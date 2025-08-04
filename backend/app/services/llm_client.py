@@ -50,19 +50,21 @@ class LLMClient:
     """Mistral LLM client for query generation and RAG responses"""
 
     def __init__(self) -> None:
-        if not settings.MISTRAL_API_KEY:
-            raise ValueError("MISTRAL_API_KEY not found in settings")
-
+        self.llm: BaseChatModel
         match settings.LLM_PROVIDER:
             case "mistral":
-                self.llm: BaseChatModel = ChatMistralAI(
+                if not settings.MISTRAL_API_KEY:
+                    raise ValueError("MISTRAL_API_KEY not found in settings")
+                self.llm = ChatMistralAI(
                     model=settings.LLM_MODEL,
                     temperature=settings.LLM_TEMPERATURE,
                     max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
                     max_retries=3,
                 )
             case "openai":
-                self.llm: BaseChatModel = ChatOpenAI(
+                if not settings.OPENAI_API_KEY:
+                    raise ValueError("OPENAI_API_KEY not found in settings")
+                self.llm = ChatOpenAI(
                     model=settings.LLM_MODEL,
                     temperature=settings.LLM_TEMPERATURE,
                     max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
