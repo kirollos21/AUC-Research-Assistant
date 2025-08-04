@@ -29,15 +29,18 @@ class EmbeddingClient:
 
     def __init__(self) -> None:
         self.embeddings: Embeddings
-        if settings.EMBEDDING_PROVIDER == "local":
-            self.embeddings = HuggingFaceEmbeddings(model_name=settings.EMBEDDING_MODEL)
-        if settings.EMBEDDING_PROVIDER == "mistral":
-            if not settings.MISTRAL_API_KEY:
-                raise ValueError("MISTRAL_API_KEY not found in settings")
-            else:
-                self.embeddings = MistralAIEmbeddings(
-                    model=settings.EMBEDDING_MODEL,
+        match settings.EMBEDDING_PROVIDER:
+            case "local":
+                self.embeddings = HuggingFaceEmbeddings(
+                    model_name=settings.EMBEDDING_MODEL
                 )
+            case "mistral":
+                if not settings.MISTRAL_API_KEY:
+                    raise ValueError("MISTRAL_API_KEY not found in settings")
+                else:
+                    self.embeddings = MistralAIEmbeddings(
+                        model=settings.EMBEDDING_MODEL,
+                    )
 
         # Initialize text splitter
         self.text_splitter: RecursiveCharacterTextSplitter = (
