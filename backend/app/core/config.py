@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 30
 
     # LLM settings
-    LLM_PROVIDER: Literal["openai", "mistral"] = "mistral"
+    LLM_PROVIDER: Literal["openai", "mistral", "ollama"] = "mistral"
     LLM_MODEL: str = "mistral-medium-latest"
     LLM_TEMPERATURE: PositiveFloat = 0.7
     LLM_MAX_OUTPUT_TOKENS: PositiveInt = 2000

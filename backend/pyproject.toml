@@ -15,6 +15,7 @@ dependencies = [
     "langchain-core>=0.3.72",
     "langchain-huggingface>=0.3.1",
     "langchain-mistralai>=0.2.11",
+    "langchain-ollama>=0.3.6",
     "langchain-openai>=0.3.28",
     "langchain-text-splitters>=0.3.9",
     "mistralai>=1.9.3",

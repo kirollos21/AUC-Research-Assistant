@@ -12,8 +12,8 @@ from langchain_core.messages.base import BaseMessage, BaseMessageChunk
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_mistralai.chat_models import ChatMistralAI
 from langchain_openai.chat_models import ChatOpenAI
+from langchain_ollama.chat_models import ChatOllama
 from pydantic import BaseModel, Field
-
 from app.core.config import settings
 
 
@@ -70,6 +70,13 @@ class LLMClient:
                     max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
                     max_retries=3,
                     base_url=settings.LLM_OPENAI_BASEURL,
+                )
+            case "ollama":
+                self.llm = ChatOllama(
+                    model=settings.LLM_MODEL,
+                    temperature=settings.LLM_TEMPERATURE,
+                    max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
+                    max_retries=3,
                 )
 
         self.query_parser: PydanticOutputParser = PydanticOutputParser(
