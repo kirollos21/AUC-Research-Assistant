@@ -47,7 +47,6 @@ class Settings(BaseSettings):
 
     # Mistral AI
     MISTRAL_API_KEY: Optional[str] = None
-    MISTRAL_EMBEDDING_MODEL: str = "mistral-embed"  # 1024 dimensions
 
     # Cohere AI
     # If not set, will skip the reranking step
@@ -104,7 +103,8 @@ class Settings(BaseSettings):
     CORS_HEADERS: List[str] = ["*"]
 
     # TODO: implement
-    EMBEDDING_PROVIDER: Literal["local", "mistral"] = "local"
+    EMBEDDING_PROVIDER: Literal["local", "mistral"] = "mistral"
+    EMBEDDING_MODEL: str = "mistral-embed"  # 1024 dimensions
 
     # Mistral embedding uses the hf_token to download the tokenizer. Without it it uses a len()
     # based tokenizer that is not optimized. More can be found here https://github.com/langchain-ai/langchain/issues/20618
