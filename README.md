@@ -179,20 +179,11 @@ cd AUC-Research-Assistant
 # Navigate to backend directory
 cd backend
 
-# Create virtual environment
-python -m venv venv
+# Sync uv environment
+uv sync
 
-# Activate virtual environment
-# Windows:
-venv\Scripts\activate
-# macOS/Linux:
-source venv/bin/activate
-
-# Install dependencies manually
-pip install fastapi uvicorn pydantic pydantic-settings arxiv httpx openai requests google-generativeai numpy scikit-learn sentence-transformers langchain langchain-mistralai mistralai chromadb langchain-chroma cohere python-dotenv langchain-core langchain-text-splitters langchain-openai
-
-# Run the development server
-python main.py
+# Run app with uv
+uv run main.py
 ```
 
 #### 3. Frontend Setup
