@@ -25,16 +25,6 @@ class AnsiColorFormatter(logging.Formatter):
             case "Default":
                 return self.supports_ansi_simple()
 
-    def __init__(
-        self,
-        fmt: str | None = None,
-        datefmt: str | None = None,
-        style: _FormatStyle = "%",
-    ) -> None:
-        self.fmt = fmt
-        self.datefmt = datefmt
-        self.style = style
-
     def format(self, record: logging.LogRecord):
         no_style = "\033[0m" if self.use_ansi_color() else ""
         bold = "\033[91m"
