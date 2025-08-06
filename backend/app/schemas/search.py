@@ -8,8 +8,6 @@ from pydantic import BaseModel, Field
 from datetime import datetime
 
 
-
-
 class SearchQuery(BaseModel):
     """Search query request schema"""
 
@@ -107,7 +105,10 @@ class SearchResult(BaseModel):
         ai = getattr(self, "access_info", None)
         if ai:
             # Treat 'open_access' (and is_open_access=True) as open; others default to restricted
-            if getattr(ai, "is_open_access", False) or getattr(ai, "access_type", "") == "open_access":
+            if (
+                getattr(ai, "is_open_access", False)
+                or getattr(ai, "access_type", "") == "open_access"
+            ):
                 self.access = "open"
             else:
                 # licensed / restricted / unknown → default to restricted for filtering purposes
@@ -116,6 +117,7 @@ class SearchResult(BaseModel):
             self.access = "restricted"
 
         return self
+
 
 class SearchStats(BaseModel):
     """Search statistics"""

@@ -5,6 +5,7 @@ Cohere Reranker Service for improving document relevance ranking
 from typing import List, Dict, Any, Optional
 import logging
 from cohere import Client
+
 try:
     from cohere.types import RerankResponse  # Cohere v4
 except Exception:

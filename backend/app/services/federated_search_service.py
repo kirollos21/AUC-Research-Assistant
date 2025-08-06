@@ -43,8 +43,9 @@ class FederatedSearchService:
             f"Initialized FederatedSearchService with connectors {self.connectors}"
         )
 
-    async def search(self, query: SearchQuery, access_filter: Optional[str] = None) -> FederatedSearchResponse:
-
+    async def search(
+        self, query: SearchQuery, access_filter: Optional[str] = None
+    ) -> FederatedSearchResponse:
         """
         Perform federated search across multiple databases
 
@@ -90,10 +91,15 @@ class FederatedSearchService:
                 else:
                     # Apply access filter before counting/adding
                     if access_filter in ("open", "restricted"):
-                        want_open = (access_filter == "open")
+                        want_open = access_filter == "open"
                         result = [
-                            r for r in result
-                            if bool(getattr(r, "access_info", None) and r.access_info.is_open_access) == want_open
+                            r
+                            for r in result
+                            if bool(
+                                getattr(r, "access_info", None)
+                                and r.access_info.is_open_access
+                            )
+                            == want_open
                         ]
                         # Optional debug to verify what you’re getting:
                         logger.debug(
@@ -176,7 +182,9 @@ class FederatedSearchService:
             return []
 
     def _get_databases_to_search(
-            self, requested_databases: Optional[List[str]], access_filter: Optional[str] = None
+        self,
+        requested_databases: Optional[List[str]],
+        access_filter: Optional[str] = None,
     ) -> List[str]:
         if not requested_databases:
             if access_filter == "open":

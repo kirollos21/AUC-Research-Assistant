@@ -78,7 +78,8 @@ class SemanticScholarConnector(DatabaseConnector):
                                     paper.get("isOpenAccess"),
                                     (paper.get("openAccessPdf") or {}),
                                     paper.get("url"),
-                                    paper.get("externalIds"))
+                                    paper.get("externalIds"),
+                                )
                             normalized_result = self._normalize_result(paper)
                             results.append(normalized_result)
 
@@ -257,10 +258,7 @@ class SemanticScholarConnector(DatabaseConnector):
         # Heuristic: arXiv items are OA
         url = (raw_result.get("url") or "").lower()
         external_ids = raw_result.get("externalIds", {}) or {}
-        arxiv_like = (
-                "arxiv.org" in url
-                or bool(external_ids.get("ArXiv"))
-        )
+        arxiv_like = "arxiv.org" in url or bool(external_ids.get("ArXiv"))
 
         is_oa = bool(is_oa_flag or pdf_url or arxiv_like)
 

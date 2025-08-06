@@ -158,10 +158,11 @@ class EmbeddingClient:
                 "type": "academic_paper",
                 "access": (
                     "open"
-                    if getattr(getattr(doc, "access_info", None), "is_open_access", False)
+                    if getattr(
+                        getattr(doc, "access_info", None), "is_open_access", False
+                    )
                     else "restricted"
                 ),
-
             }
 
             # Create langchain document
@@ -218,7 +219,7 @@ class EmbeddingClient:
         return self.collection_name
 
     async def similarity_search(
-            self, query: str, k: int = 5, access_filter: Optional[str] = None
+        self, query: str, k: int = 5, access_filter: Optional[str] = None
     ) -> List[Dict[str, Any]]:
         """
         Perform similarity search on stored documents
@@ -236,8 +237,14 @@ class EmbeddingClient:
         try:
             # Perform similarity search
             # AFTER
-            chroma_filter = {"access": access_filter} if access_filter in ("open", "restricted") else None
-            results = self.vector_store.similarity_search_with_score(query, k=k, filter=chroma_filter)
+            chroma_filter = (
+                {"access": access_filter}
+                if access_filter in ("open", "restricted")
+                else None
+            )
+            results = self.vector_store.similarity_search_with_score(
+                query, k=k, filter=chroma_filter
+            )
 
             # Format results
             formatted_results: List[Dict[str, Any]] = []
@@ -257,7 +264,9 @@ class EmbeddingClient:
                         "year": metadata.get("year", "Unknown"),
                         "source": metadata.get("source", "Unknown"),
                         "url": metadata.get("url", ""),
-                        "abstract": self._extract_abstract_from_content(doc.page_content),
+                        "abstract": self._extract_abstract_from_content(
+                            doc.page_content
+                        ),
                         "access": metadata.get("access", "restricted"),  # <-- NEW
                     }
                 )
