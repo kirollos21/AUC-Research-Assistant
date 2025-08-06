@@ -44,7 +44,15 @@ class AnsiColorFormatter(logging.Formatter):
             else ""
         )
         end_style = no_style
-        return f"{start_style}{self.formatTime(record)} [{record.levelname}] {record.name}: {record.getMessage()}{end_style}"
+
+        if record.exc_info and not record.exc_text:
+            record.exc_text = self.formatException(record.exc_info)
+        exc_text = "\n" + record.exc_text if record.exc_text else ""
+
+        if record.levelname in ["ERROR", "CRITICAL", "WARNING"]:
+            return f"{start_style}{self.formatTime(record)} [{record.levelname}] {record.name}[l{record.lineno}]: {record.getMessage()}{exc_text}{end_style}"
+        else:
+            return f"{start_style}{self.formatTime(record)} [{record.levelname}] {record.name}: {record.getMessage()}{end_style}"
 
 
 def setup_logging() -> None:

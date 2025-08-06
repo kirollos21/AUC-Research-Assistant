@@ -6,14 +6,16 @@ from pydantic import model_validator
 from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field
 from datetime import datetime
+from app.core.config import SearchEngineName, settings
 
 
 class SearchQuery(BaseModel):
     """Search query request schema"""
 
     query: str = Field(..., description="Main search query")
-    databases: Optional[List[str]] = Field(
-        default=None, description="List of databases to search"
+    databases: Optional[List[SearchEngineName]] = Field(
+        default=settings.ENABLED_SEARCH_ENGINES,
+        description="List of databases to search",
     )
     max_results: int = Field(
         default=20, ge=1, le=100, description="Maximum results per database"
@@ -74,9 +76,8 @@ class SearchResult(BaseModel):
     doi: Optional[str] = None
     url: Optional[str] = None
     source_database: str = Field(..., description="Database that provided this result")
+    # TODO: resolve these two seemingly functionally-overlapping attributes
     access_info: AccessInfo
-
-    # NEW — normalized flag we’ll use for filtering & vector-store metadata
     access: Literal["open", "restricted"] = "restricted"
 
     citation_info: Optional[Citation] = None
@@ -95,7 +96,8 @@ class SearchResult(BaseModel):
     # Raw metadata from source
     raw_metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    # ---- NEW: derive `access` automatically from `access_info` if caller didn't set it
+    # TODO: check if this is necessary. If not, delete
+    # derive `access` automatically from `access_info` if caller didn't set it
     @model_validator(mode="after")
     def _derive_access_from_access_info(self):
         # if access already set explicitly, keep it

@@ -25,9 +25,9 @@ import dotenv
 
 dotenv.load_dotenv()
 
+
+# TODO: Make a sub-class of EmbeddingClient
 # Fallback: use Mistral's embeddings API directly (no HF tokenizer)
-
-
 class SimpleMistralEmbeddings(LCEmbeddings):
     def __init__(self, api_key: str, model: str):
         self._client = MistralClient(api_key=api_key)
@@ -242,7 +242,6 @@ class EmbeddingClient:
 
         try:
             # Perform similarity search
-            # AFTER
             chroma_filter = (
                 {"access": access_filter}
                 if access_filter in ("open", "restricted")
@@ -273,7 +272,7 @@ class EmbeddingClient:
                         "abstract": self._extract_abstract_from_content(
                             doc.page_content
                         ),
-                        "access": metadata.get("access", "restricted"),  # <-- NEW
+                        "access": metadata.get("access", "restricted"),
                     }
                 )
 

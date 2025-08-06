@@ -21,6 +21,7 @@ from app.schemas.search import (
     DatabaseStatus,
 )
 from app.services.database_connectors.base import DatabaseConnector
+from app.core.config import SearchEngineName, settings
 
 
 logger = logging.getLogger(__name__)
@@ -30,7 +31,7 @@ class FederatedSearchService:
     """Service for coordinating federated search across academic databases"""
 
     def __init__(self):
-        self.connectors = {
+        self.connectors: Dict[SearchEngineName, DatabaseConnector] = {
             "arxiv": ArxivConnector(),
             "semantic_scholar": SemanticScholarConnector(),
             # Add more connectors as they're implemented
@@ -152,7 +153,7 @@ class FederatedSearchService:
             return response
 
         except Exception as e:
-            logger.error(f"Federated search error: {e}")
+            logger.exception(f"Federated search error: {e}")
             # Return empty response on error
             return FederatedSearchResponse(
                 query=query.query,
@@ -182,14 +183,13 @@ class FederatedSearchService:
             return []
 
     def _get_databases_to_search(
-        self,
-        requested_databases: Optional[List[str]],
-        access_filter: Optional[str] = None,
-    ) -> List[str]:
+        self, requested_databases: Optional[List[SearchEngineName]]
+    ) -> List[SearchEngineName]:
+        """Determine which databases to search"""
         if not requested_databases:
-            if access_filter == "open":
-                return ["semantic_scholar", "arxiv"]
-            return ["semantic_scholar"]
+            return settings.ENABLED_SEARCH_ENGINES
+
+        # Filter to only available databases
         return [db for db in requested_databases if db in self.available_databases]
 
     def _remove_duplicates(
@@ -281,7 +281,8 @@ class FederatedSearchService:
             else:
                 return 0.2
 
-        except:
+        except Exception as e:
+            logger.exception(f"Failed to calculate recency score: {e}")
             return 0.5
 
     def _calculate_citation_score(self, citation_info) -> float:
@@ -304,7 +305,8 @@ class FederatedSearchService:
             else:
                 return 0.2
 
-        except:
+        except Exception as e:
+            logger.exception(f"Failed to calculate citation score: {e}")
             return 0.5
 
     async def get_database_status(self) -> List[DatabaseStatus]:

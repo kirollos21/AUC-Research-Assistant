@@ -32,11 +32,7 @@ class SemanticScholarConnector(DatabaseConnector):
             params = {
                 "query": query.query,
                 "limit": min(query.max_results, 100),  # API limit is 100
-                "fields": (
-                    "paperId,title,abstract,authors,year,publicationDate,citationCount,url,"
-                    "journal,venue,publicationTypes,publicationVenue,externalIds,"
-                    "isOpenAccess,openAccessPdf,fieldsOfStudy"
-                ),
+                "fields": "paperId,title,abstract,authors,year,publicationDate,citationCount,url,journal,venue,publicationTypes,publicationVenue,externalIds,openAccessPdf,fieldsOfStudy",
                 "offset": 0,
             }
             # Add date filters if specified
@@ -67,21 +63,9 @@ class SemanticScholarConnector(DatabaseConnector):
                     data = response.json()
                     results = []
 
-                    if response.status_code == 200:
-                        data = response.json()
-                        results = []
-
-                        for idx, paper in enumerate(data.get("data", [])):
-                            if idx < 3:  # log just a few
-                                logger.debug(
-                                    "S2 paper OA fields: isOpenAccess=%s, openAccessPdf=%s, url=%s, externalIds=%s",
-                                    paper.get("isOpenAccess"),
-                                    (paper.get("openAccessPdf") or {}),
-                                    paper.get("url"),
-                                    paper.get("externalIds"),
-                                )
-                            normalized_result = self._normalize_result(paper)
-                            results.append(normalized_result)
+                    for paper in data.get("data", []):
+                        normalized_result = self._normalize_result(paper)
+                        results.append(normalized_result)
 
                     logger.info(
                         f"Semantic Scholar search returned {len(results)} results for query: {query.query}"

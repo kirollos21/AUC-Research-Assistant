@@ -2,6 +2,7 @@
 Query endpoint for RAG-based academic research assistance
 """
 
+import warnings
 from typing import List, Dict, Any, Optional, AsyncIterator, cast, Literal
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -17,13 +18,7 @@ from app.services.embedding_client import get_embedding_client
 from app.services.federated_search_service import FederatedSearchService
 from app.services.cohere_reranker import get_cohere_reranker
 
-
 logger = logging.getLogger(__name__)
-logging.basicConfig(
-    format="%(asctime)s,%(msecs)03d %(levelname)-8s [%(filename)s:%(lineno)d] %(message)s",
-    datefmt="%Y-%m-%dT%H:%M:%S",
-    level=logging.DEBUG,
-)
 router = APIRouter()
 
 
@@ -74,6 +69,11 @@ async def process_research_query_stream(request: QueryRequest):
 
     First sends top-k documents, then streams LLM response
     """
+    warnings.warn(
+        f"process_research_query_stream() in file {__file__} is deprecated and will be removed in a future version. Use create_chat_completion() instead.",
+        category=DeprecationWarning,
+        stacklevel=2,
+    )
 
     async def generate_stream():
         """Generate streaming response"""
@@ -106,12 +106,7 @@ async def process_research_query_stream(request: QueryRequest):
 
             for i, query_info in enumerate(database_queries):
                 search_query: str = query_info["query"]
-                # yield f"data: {json.dumps({'type': 'status', 'message': f'Searching with query {i + 1}/{len(database_queries)}: {query_info["focus"]}'})}\n\n"
-                focus = query_info.get("focus", "")
-                status_msg = (
-                    f"Searching with query {i + 1}/{len(database_queries)}: {focus}"
-                )
-                yield f"data: {json.dumps({'type': 'status', 'message': status_msg})}\n\n"
+                yield f"data: {json.dumps({'type': 'status', 'message': f'Searching with query {i + 1}/{len(database_queries)}: {query_info["focus"]}'})}\n\n"
 
                 try:
                     search_response: FederatedSearchResponse = (
@@ -155,7 +150,7 @@ async def process_research_query_stream(request: QueryRequest):
             ] = await embedding_client.similarity_search(
                 query=request.query,
                 k=top_k,
-                access_filter=request.access_filter,  # NEW
+                access_filter=request.access_filter,
             )
 
             # Step 4.5: Rerank documents using Cohere

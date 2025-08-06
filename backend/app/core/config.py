@@ -2,16 +2,17 @@
 Application configuration management
 """
 
-from typing import List, Literal, Optional
-from pydantic import PositiveFloat, PositiveInt
-from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
+from typing import List, Literal, Optional, TypeAlias
+from pydantic import PositiveFloat, PositiveInt
+from pydantic_settings import BaseSettings
+
+
+SearchEngineName: TypeAlias = Literal["arxiv", "semantic_scholar"]
 
 
 class Settings(BaseSettings):
     """Application settings"""
-
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8")
 
     # Application
     APP_NAME: str = "AUC Research Assistant"
@@ -66,6 +67,11 @@ class Settings(BaseSettings):
     # In seconds. Note that this is in addition to the rate limiting
     SEARCH_TIMEOUT: PositiveFloat = 30.0
 
+    ENABLED_SEARCH_ENGINES: List[SearchEngineName] = [
+        "arxiv",
+        "semantic_scholar",
+    ]
+
     # Vector Database
     VECTOR_DB_TYPE: str = "chromadb"
     CHROMA_PERSIST_DIRECTORY: str = "./data/chroma_db"
@@ -104,9 +110,9 @@ class Settings(BaseSettings):
     # based tokenizer that is not optimized. More can be found here https://github.com/langchain-ai/langchain/issues/20618
     HF_TOKEN: Optional[str] = None
 
-    # class Config:
-    #     env_file = ".env"
-    #     case_sensitive = True
+    class Config:
+        env_file = ".env"
+        case_sensitive = True
 
 
 @lru_cache()
