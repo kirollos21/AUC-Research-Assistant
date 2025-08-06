@@ -16,8 +16,8 @@
   # https://devenv.sh/languages/
   languages.python = {
     enable = true;
-    venv.enable = true;
-    # venv.requirements = ./requirements.txt;
+    uv.enable = true;
+    uv.sync.enable = true;
   };
 
   # https://devenv.sh/processes/

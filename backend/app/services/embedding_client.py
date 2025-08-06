@@ -10,6 +10,7 @@ from langchain_mistralai.embeddings import MistralAIEmbeddings
 from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
+from langchain_huggingface import HuggingFaceEmbeddings
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from app.core.config import settings
@@ -48,14 +49,19 @@ class EmbeddingClient:
     """Mistral embedding client for document embedding and vector search"""
 
     def __init__(self) -> None:
-        if not settings.MISTRAL_API_KEY:
-            raise ValueError("MISTRAL_API_KEY not found in settings")
-
-        # Initialize Mistral embeddings
-        self.embeddings = SimpleMistralEmbeddings(
-            api_key=settings.MISTRAL_API_KEY,
-            model=settings.MISTRAL_EMBEDDING_MODEL,
-        )
+        self.embeddings: Embeddings
+        match settings.EMBEDDING_PROVIDER:
+            case "local":
+                self.embeddings = HuggingFaceEmbeddings(
+                    model_name=settings.EMBEDDING_MODEL
+                )
+            case "mistral":
+                if not settings.MISTRAL_API_KEY:
+                    raise ValueError("MISTRAL_API_KEY not found in settings")
+                else:
+                    self.embeddings = MistralAIEmbeddings(
+                        model=settings.EMBEDDING_MODEL,
+                    )
 
         # Initialize text splitter
         self.text_splitter: RecursiveCharacterTextSplitter = (

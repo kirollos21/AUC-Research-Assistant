@@ -250,7 +250,7 @@ async def health_check():
             },
             "config": {
                 "llm_model": settings.LLM_MODEL,
-                "embedding_model": settings.MISTRAL_EMBEDDING_MODEL,
+                "embedding_model": settings.EMBEDDING_MODEL,
                 "cohere_rerank_model": settings.COHERE_RERANK_MODEL,
                 "top_k": settings.RAG_TOP_K,
                 "reranker_top_n": settings.COHERE_TOP_N,

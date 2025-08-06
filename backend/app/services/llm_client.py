@@ -13,8 +13,9 @@ from langchain_core.messages.base import BaseMessageChunk
 from langchain_core.output_parsers import PydanticOutputParser
 
 from langchain_mistralai.chat_models import ChatMistralAI
-from langchain_openai import ChatOpenAI  # 0.1.x export
-
+from langchain_openai.chat_models import ChatOpenAI
+from langchain_ollama.chat_models import ChatOllama
+from pydantic import BaseModel, Field
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)
@@ -41,32 +42,34 @@ class LLMClient:
     """LLM client for query generation and RAG responses"""
 
     def __init__(self) -> None:
-        provider = (settings.LLM_PROVIDER or "mistral").lower()
-        model = settings.LLM_MODEL or "open-mixtral-8x7b"
-
-        if provider == "mistral":
-            if not settings.MISTRAL_API_KEY:
-                raise ValueError("MISTRAL_API_KEY not found in settings")
-            self.llm: BaseChatModel = ChatMistralAI(
-                api_key=settings.MISTRAL_API_KEY,
-                model=model,
-                temperature=settings.LLM_TEMPERATURE,
-                max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
-                max_retries=3,
-            )
-        elif provider == "openai":
-            if not settings.OPENAI_API_KEY:
-                raise ValueError("OPENAI_API_KEY not found in settings")
-            self.llm: BaseChatModel = ChatOpenAI(
-                api_key=settings.OPENAI_API_KEY,
-                model=model,
-                temperature=settings.LLM_TEMPERATURE,
-                max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
-                max_retries=3,
-                base_url=getattr(settings, "LLM_OPENAI_BASEURL", None),
-            )
-        else:
-            raise RuntimeError(f"Unsupported LLM_PROVIDER: {provider}")
+        self.llm: BaseChatModel
+        match settings.LLM_PROVIDER:
+            case "mistral":
+                if not settings.MISTRAL_API_KEY:
+                    raise ValueError("MISTRAL_API_KEY not found in settings")
+                self.llm = ChatMistralAI(
+                    model=settings.LLM_MODEL,
+                    temperature=settings.LLM_TEMPERATURE,
+                    max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
+                    max_retries=3,
+                )
+            case "openai":
+                if not settings.OPENAI_API_KEY:
+                    raise ValueError("OPENAI_API_KEY not found in settings")
+                self.llm = ChatOpenAI(
+                    model=settings.LLM_MODEL,
+                    temperature=settings.LLM_TEMPERATURE,
+                    max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
+                    max_retries=3,
+                    base_url=settings.LLM_OPENAI_BASEURL,
+                )
+            case "ollama":
+                self.llm = ChatOllama(
+                    model=settings.LLM_MODEL,
+                    temperature=settings.LLM_TEMPERATURE,
+                    max_tokens=settings.LLM_MAX_OUTPUT_TOKENS,
+                    max_retries=3,
+                )
 
         # must be inside __init__
         self.query_parser: PydanticOutputParser = PydanticOutputParser(
