@@ -7,7 +7,7 @@ from chromadb.api import ClientAPI
 from langchain_core.vectorstores import VectorStore
 from langchain_core.embeddings import Embeddings
 from langchain_mistralai.embeddings import MistralAIEmbeddings
-from langchain_community.vectorstores import Chroma
+from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_core.documents import Document
 from langchain_huggingface import HuggingFaceEmbeddings
@@ -16,7 +16,6 @@ from chromadb.config import Settings as ChromaSettings
 from app.core.config import settings
 from app.schemas.search import SearchResult
 from mistralai.client import MistralClient
-from langchain_core.embeddings import Embeddings as LCEmbeddings
 import os
 import hashlib
 
@@ -28,7 +27,7 @@ dotenv.load_dotenv()
 
 # TODO: Make a sub-class of EmbeddingClient
 # Fallback: use Mistral's embeddings API directly (no HF tokenizer)
-class SimpleMistralEmbeddings(LCEmbeddings):
+class SimpleMistralEmbeddings(Embeddings):
     def __init__(self, api_key: str, model: str):
         self._client = MistralClient(api_key=api_key)
         self._model = model

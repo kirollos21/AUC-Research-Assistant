@@ -116,14 +116,6 @@ class FederatedSearchService:
                 all_results
             )
 
-            # Sort by publication date (most recent first)
-            deduplicated_results.sort(
-                key=lambda x: x.publication_date
-                if x.publication_date
-                else datetime.min,
-                reverse=True,
-            )
-
             # Calculate search time
             end_time = datetime.now()
             search_time_ms = int((end_time - start_time).total_seconds() * 1000)

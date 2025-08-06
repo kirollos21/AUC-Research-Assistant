@@ -140,7 +140,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
         # Step 3: Process and embed documents
         # Step 4: Retrieve top-k documents
         # Step 4.5: Rerank documents using Cohere
-        # Step 5: Generate streaming LLM response completion_id = str(uuid.uuid4())
+        # Step 5: Generate streaming LLM response
         completion_id = str(uuid.uuid4())
         created = int(time.time())
         system_fingerprint = get_system_fingerprint()
