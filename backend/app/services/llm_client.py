@@ -79,7 +79,7 @@ class LLMClient:
                     max_retries=3,
                 )
 
-        self.query_parser: PydanticOutputParser = PydanticOutputParser(
+        self.query_parser: PydanticOutputParser[DatabaseQueries] = PydanticOutputParser(
             pydantic_object=DatabaseQueries
         )
 

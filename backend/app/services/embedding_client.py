@@ -4,8 +4,8 @@ Embedding client service for Mistral integration
 
 from typing import List, Dict, Any, Optional, Union
 from chromadb.api import ClientAPI
-from langchain_core.embeddings.embeddings import Embeddings
-from langchain_core.vectorstores.base import VectorStore
+from langchain_core.vectorstores import VectorStore
+from langchain_core.embeddings import Embeddings
 from langchain_mistralai.embeddings import MistralAIEmbeddings
 from langchain_chroma import Chroma
 from langchain_text_splitters import RecursiveCharacterTextSplitter
@@ -15,6 +15,7 @@ import chromadb
 from chromadb.config import Settings as ChromaSettings
 from app.core.config import settings
 from app.schemas.search import SearchResult
+from mistralai.client import MistralClient
 import os
 import hashlib
 
@@ -22,6 +23,25 @@ import hashlib
 import dotenv
 
 dotenv.load_dotenv()
+
+
+# TODO: Make a sub-class of EmbeddingClient
+# Fallback: use Mistral's embeddings API directly (no HF tokenizer)
+class SimpleMistralEmbeddings(Embeddings):
+    def __init__(self, api_key: str, model: str):
+        self._client = MistralClient(api_key=api_key)
+        self._model = model
+
+    def embed_documents(self, texts):
+        # call Mistral API once per text to avoid batching/token counting
+        out = []
+        for t in texts:
+            emb = self._client.embeddings(model=self._model, input=t).data[0].embedding
+            out.append(emb)
+        return out
+
+    def embed_query(self, text):
+        return self.embed_documents([text])[0]
 
 
 class EmbeddingClient:
@@ -141,6 +161,13 @@ class EmbeddingClient:
                 "url": url,
                 "doc_hash": doc_hash,
                 "type": "academic_paper",
+                "access": (
+                    "open"
+                    if getattr(
+                        getattr(doc, "access_info", None), "is_open_access", False
+                    )
+                    else "restricted"
+                ),
             }
 
             # Create langchain document
@@ -196,7 +223,9 @@ class EmbeddingClient:
 
         return self.collection_name
 
-    async def similarity_search(self, query: str, k: int = 5) -> List[Dict[str, Any]]:
+    async def similarity_search(
+        self, query: str, k: int = 5, access_filter: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
         """
         Perform similarity search on stored documents
 
@@ -212,7 +241,14 @@ class EmbeddingClient:
 
         try:
             # Perform similarity search
-            results = self.vector_store.similarity_search_with_score(query, k=k)
+            chroma_filter = (
+                {"access": access_filter}
+                if access_filter in ("open", "restricted")
+                else None
+            )
+            results = self.vector_store.similarity_search_with_score(
+                query, k=k, filter=chroma_filter
+            )
 
             # Format results
             formatted_results: List[Dict[str, Any]] = []
@@ -235,6 +271,7 @@ class EmbeddingClient:
                         "abstract": self._extract_abstract_from_content(
                             doc.page_content
                         ),
+                        "access": metadata.get("access", "restricted"),
                     }
                 )
 

@@ -3,7 +3,7 @@ Query endpoint for RAG-based academic research assistance
 """
 
 import warnings
-from typing import List, Dict, Any, Optional, AsyncIterator, cast
+from typing import List, Dict, Any, Optional, AsyncIterator, cast, Literal
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
 from langchain_core.messages.base import BaseMessageChunk
@@ -35,6 +35,7 @@ class QueryRequest(BaseModel):
     databases: Optional[List[str]] = Field(
         default=None, description="List of databases to search"
     )
+    access_filter: Optional[Literal["open", "restricted"]] = None
 
 
 class DocumentResult(BaseModel):
@@ -47,6 +48,7 @@ class DocumentResult(BaseModel):
     url: str
     abstract: str
     score: float
+    access: str = "restricted"
 
 
 class QueryResponse(BaseModel):
@@ -145,7 +147,11 @@ async def process_research_query_stream(request: QueryRequest):
             top_k: int = request.top_k or settings.RAG_TOP_K
             top_documents: List[
                 Dict[str, Any]
-            ] = await embedding_client.similarity_search(query=request.query, k=top_k)
+            ] = await embedding_client.similarity_search(
+                query=request.query,
+                k=top_k,
+                access_filter=request.access_filter,
+            )
 
             # Step 4.5: Rerank documents using Cohere
             top_n: int = settings.COHERE_TOP_N
@@ -166,6 +172,7 @@ async def process_research_query_stream(request: QueryRequest):
                     "url": doc.get("url", ""),
                     "abstract": doc.get("abstract", ""),
                     "score": doc.get("score", 0.0),
+                    "access": doc.get("access", "restricted"),
                 }
                 for doc in top_documents
             ]

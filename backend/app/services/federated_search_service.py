@@ -4,9 +4,10 @@ Federated Search Service - Orchestrates searches across multiple academic databa
 
 import asyncio
 import logging
-from typing import Dict, List, Optional
+from typing import List, Dict, Any, Optional
 from datetime import datetime
 import hashlib
+from collections import defaultdict
 
 from app.services.database_connectors.arxiv_connector import ArxivConnector
 from app.services.database_connectors.semantic_scholar_connector import (
@@ -43,7 +44,9 @@ class FederatedSearchService:
             f"Initialized FederatedSearchService with connectors {self.connectors}"
         )
 
-    async def search(self, query: SearchQuery) -> FederatedSearchResponse:
+    async def search(
+        self, query: SearchQuery, access_filter: Optional[str] = None
+    ) -> FederatedSearchResponse:
         """
         Perform federated search across multiple databases
 
@@ -87,6 +90,23 @@ class FederatedSearchService:
                     failed_databases.append(db_name)
                     results_per_database[db_name] = 0
                 else:
+                    # Apply access filter before counting/adding
+                    if access_filter in ("open", "restricted"):
+                        want_open = access_filter == "open"
+                        result = [
+                            r
+                            for r in result
+                            if bool(
+                                getattr(r, "access_info", None)
+                                and r.access_info.is_open_access
+                            )
+                            == want_open
+                        ]
+                        # Optional debug to verify what you’re getting:
+                        logger.debug(
+                            f"[{db_name}] access_filter={access_filter} -> {len(result)} results after filtering"
+                        )
+
                     successful_databases.append(db_name)
                     results_per_database[db_name] = len(result)
                     all_results.extend(result)
@@ -159,9 +179,6 @@ class FederatedSearchService:
     ) -> List[SearchEngineName]:
         """Determine which databases to search"""
         if not requested_databases:
-            # Since semantic scholar has arxiv included in it, it doesn't make
-            # sense to include arxiv anymore unless the user explicitly wants
-            # it for some reason
             return settings.ENABLED_SEARCH_ENGINES
 
         # Filter to only available databases

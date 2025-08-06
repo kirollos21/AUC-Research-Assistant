@@ -35,7 +35,6 @@ class SemanticScholarConnector(DatabaseConnector):
                 "fields": "paperId,title,abstract,authors,year,publicationDate,citationCount,url,journal,venue,publicationTypes,publicationVenue,externalIds,openAccessPdf,fieldsOfStudy",
                 "offset": 0,
             }
-
             # Add date filters if specified
             if query.date_range:
                 if "start" in query.date_range:
@@ -225,27 +224,36 @@ class SemanticScholarConnector(DatabaseConnector):
         return external_ids.get("DOI")
 
     def _determine_access_info_ss(self, raw_result: Dict[str, Any]) -> AccessInfo:
-        """Determine access information for Semantic Scholar result"""
-        open_access_pdf = raw_result.get("openAccessPdf")
+        """Determine access information for a Semantic Scholar result.
 
-        if open_access_pdf and open_access_pdf.get("url"):
-            return AccessInfo(
-                is_open_access=True,
-                access_type="open_access",
-                license=None,
-                license_url=None,
-                repository_url=raw_result.get("url"),
-                pdf_url=open_access_pdf.get("url"),
-            )
-        else:
-            return AccessInfo(
-                is_open_access=False,
-                access_type="unknown",
-                license=None,
-                license_url=None,
-                repository_url=raw_result.get("url"),
-                pdf_url=None,
-            )
+        Signals we use (in order):
+        1) isOpenAccess == True
+        2) openAccessPdf.url present
+        3) obvious arXiv cases (URL or externalIds)
+        """
+        # Official signals
+        is_oa_flag = raw_result.get("isOpenAccess") is True
+
+        pdf_url = None
+        open_access_pdf = raw_result.get("openAccessPdf")
+        if isinstance(open_access_pdf, dict):
+            pdf_url = open_access_pdf.get("url")
+
+        # Heuristic: arXiv items are OA
+        url = (raw_result.get("url") or "").lower()
+        external_ids = raw_result.get("externalIds", {}) or {}
+        arxiv_like = "arxiv.org" in url or bool(external_ids.get("ArXiv"))
+
+        is_oa = bool(is_oa_flag or pdf_url or arxiv_like)
+
+        return AccessInfo(
+            is_open_access=is_oa,
+            access_type="open_access" if is_oa else "restricted",
+            license=None,
+            license_url=None,
+            repository_url=raw_result.get("url"),
+            pdf_url=pdf_url,
+        )
 
     def _determine_document_type(self, raw_result: Dict[str, Any]) -> str:
         """Determine document type from publication types"""

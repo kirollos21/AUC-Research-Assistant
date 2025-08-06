@@ -2,10 +2,12 @@
 Cohere Reranker Service for improving document relevance ranking
 """
 
-from typing import List, Dict, Any, Optional
 import logging
+from typing import Any, Dict, List, Optional
+
 from cohere import Client
 from cohere.types import RerankResponse
+
 from app.core.config import settings
 
 logger = logging.getLogger(__name__)

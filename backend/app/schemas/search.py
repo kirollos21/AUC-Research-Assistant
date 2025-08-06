@@ -2,11 +2,10 @@
 Pydantic schemas for search functionality
 """
 
-from datetime import datetime
-from typing import Any, Dict, List, Literal, Optional
-
+from pydantic import model_validator
+from typing import List, Optional, Dict, Any, Literal
 from pydantic import BaseModel, Field
-
+from datetime import datetime
 from app.core.config import SearchEngineName, settings
 
 
@@ -77,7 +76,10 @@ class SearchResult(BaseModel):
     doi: Optional[str] = None
     url: Optional[str] = None
     source_database: str = Field(..., description="Database that provided this result")
+    # TODO: resolve these two seemingly functionally-overlapping attributes
     access_info: AccessInfo
+    access: Literal["open", "restricted"] = "restricted"
+
     citation_info: Optional[Citation] = None
     keywords: List[str] = Field(default_factory=list)
     subjects: List[str] = Field(default_factory=list)
@@ -93,6 +95,30 @@ class SearchResult(BaseModel):
 
     # Raw metadata from source
     raw_metadata: Dict[str, Any] = Field(default_factory=dict)
+
+    # TODO: check if this is necessary. If not, delete
+    # derive `access` automatically from `access_info` if caller didn't set it
+    @model_validator(mode="after")
+    def _derive_access_from_access_info(self):
+        # if access already set explicitly, keep it
+        if getattr(self, "access", None) in ("open", "restricted"):
+            return self
+
+        ai = getattr(self, "access_info", None)
+        if ai:
+            # Treat 'open_access' (and is_open_access=True) as open; others default to restricted
+            if (
+                getattr(ai, "is_open_access", False)
+                or getattr(ai, "access_type", "") == "open_access"
+            ):
+                self.access = "open"
+            else:
+                # licensed / restricted / unknown → default to restricted for filtering purposes
+                self.access = "restricted"
+        else:
+            self.access = "restricted"
+
+        return self
 
 
 class SearchStats(BaseModel):
