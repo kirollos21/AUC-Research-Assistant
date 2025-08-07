@@ -20,25 +20,6 @@ import os
 import hashlib
 
 
-# TODO: Make a sub-class of EmbeddingClient
-# Fallback: use Mistral's embeddings API directly (no HF tokenizer)
-class SimpleMistralEmbeddings(Embeddings):
-    def __init__(self, api_key: str, model: str):
-        self._client = MistralClient(api_key=api_key)
-        self._model = model
-
-    def embed_documents(self, texts):
-        # call Mistral API once per text to avoid batching/token counting
-        out = []
-        for t in texts:
-            emb = self._client.embeddings(model=self._model, input=t).data[0].embedding
-            out.append(emb)
-        return out
-
-    def embed_query(self, text):
-        return self.embed_documents([text])[0]
-
-
 class EmbeddingClient:
     """Mistral embedding client for document embedding and vector search"""
 
