@@ -5,10 +5,13 @@ Application configuration management
 from functools import lru_cache
 from typing import List, Literal, Optional, TypeAlias
 
+from dotenv import load_dotenv
 from pydantic import PositiveFloat, PositiveInt
 from pydantic_settings import BaseSettings
 
 SearchEngineName: TypeAlias = Literal["arxiv", "semantic_scholar"]
+
+_ = load_dotenv()
 
 
 class Settings(BaseSettings):
