@@ -15,7 +15,6 @@ import chromadb
 from chromadb.config import Settings as ChromaSettings
 from app.core.config import settings
 from app.schemas.search import SearchResult
-from mistralai.client import MistralClient
 import os
 import hashlib
 
