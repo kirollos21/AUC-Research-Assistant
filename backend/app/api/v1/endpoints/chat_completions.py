@@ -539,7 +539,23 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 for doc in top_documents
             ]
 
-            yield f"data: {json.dumps({'type': 'documents', 'documents': document_results})}\n\n"
+            if request.stream_events:
+                document_results_completion_chunk = ChatCompletionChunk(
+                    id=completion_id,
+                    created=created,
+                    model=request.model,
+                    choices=[
+                        ChatCompletionChoice(
+                            index=0,
+                            delta=ChatMessageDelta(
+                                content=f"<event>documents:{json.dumps(document_results)}</event>"
+                            ),
+                            finish_reason=None,
+                        )
+                    ],
+                    system_fingerprint=system_fingerprint,
+                )
+                yield f"data: {document_results_completion_chunk.model_dump_json()}\n\n"
 
             # Step 5: Generate streaming LLM response
             logger.info("Step 5: Starting LLM response generation")
