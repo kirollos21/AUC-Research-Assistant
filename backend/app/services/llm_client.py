@@ -1,5 +1,5 @@
 """
-LLM client service for Mistral integration
+LLM client service
 """
 
 import logging
@@ -47,7 +47,7 @@ class DatabaseQueries(BaseModel):
 
 
 class LLMClient:
-    """Mistral LLM client for query generation and RAG responses"""
+    """LLM client for query generation and RAG responses"""
 
     def __init__(self) -> None:
         self.llm: BaseChatModel
