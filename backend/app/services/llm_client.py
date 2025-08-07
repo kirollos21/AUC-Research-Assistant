@@ -355,6 +355,7 @@ Guidelines:
 - Provide a comprehensive answer that synthesizes information from multiple sources
 - Maintain academic tone and accuracy
 - If you find conflicting information, acknowledge it and explain the different perspectives
+- Do not create a bibliography at the end of your response. Simply cite the sources provided to you. The bibliography will be automatically generated and provided to the user.
 
 Relevant academic documents:
 {context_text}"""
