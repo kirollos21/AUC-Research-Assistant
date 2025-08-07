@@ -209,4 +209,14 @@ secrets/
 
 # Local development
 local_settings.py
-.local/ 
+.local/
+
+backend/.envrc
+rsync-excludes
+backend/CLAUDE.md
+pyrightconfig.json
+.zed
+
+.devenv
+.devenv.flake.nix
+chroma_db

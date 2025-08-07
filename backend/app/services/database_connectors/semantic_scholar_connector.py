@@ -61,7 +61,7 @@ class SemanticScholarConnector(DatabaseConnector):
 
                 if response.status_code == 200:
                     data = response.json()
-                    results = []
+                    results: List[SearchResult] = []
 
                     for paper in data.get("data", []):
                         normalized_result = self._normalize_result(paper)
@@ -78,7 +78,7 @@ class SemanticScholarConnector(DatabaseConnector):
                     return []
 
         except Exception as e:
-            logger.error(f"Semantic Scholar search error: {e}")
+            logger.exception(f"Semantic Scholar search error: {e}. Returning nothing.")
             return []
 
     def _normalize_result(self, raw_result: Dict[str, Any]) -> SearchResult:

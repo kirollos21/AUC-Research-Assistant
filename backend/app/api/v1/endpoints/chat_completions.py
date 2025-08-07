@@ -525,6 +525,22 @@ async def create_chat_completion(request: ChatCompletionRequest):
             else:
                 logger.info("Step 4.5 skipped: No documents to rerank")
 
+            # Send top documents
+            document_results: List[Dict[str, Any]] = [
+                {
+                    "title": doc.get("title", "Unknown Title"),
+                    "authors": doc.get("authors", "Unknown Authors"),
+                    "year": doc.get("year", "Unknown"),
+                    "source": doc.get("source", "Unknown"),
+                    "url": doc.get("url", ""),
+                    "abstract": doc.get("abstract", ""),
+                    "score": doc.get("score", 0.0),
+                }
+                for doc in top_documents
+            ]
+
+            yield f"data: {json.dumps({'type': 'documents', 'documents': document_results})}\n\n"
+
             # Step 5: Generate streaming LLM response
             logger.info("Step 5: Starting LLM response generation")
 

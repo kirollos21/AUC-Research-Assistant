@@ -85,6 +85,7 @@ class ArxivConnector(DatabaseConnector):
         for result in results:
             yield result
 
+    # TODO: improve typing
     def _normalize_result(self, raw_result) -> SearchResult:
         """Normalize arXiv result to SearchResult schema"""
         try:

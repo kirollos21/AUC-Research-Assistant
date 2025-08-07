@@ -4,7 +4,7 @@ Federated Search Service - Orchestrates searches across multiple academic databa
 
 import asyncio
 import logging
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, final
 from datetime import datetime
 import hashlib
 from collections import defaultdict
@@ -27,6 +27,7 @@ from app.core.config import SearchEngineName, settings
 logger = logging.getLogger(__name__)
 
 
+@final
 class FederatedSearchService:
     """Service for coordinating federated search across academic databases"""
 
@@ -38,6 +39,7 @@ class FederatedSearchService:
             # "pubmed": PubmedConnector(),
             # "crossref": CrossrefConnector(),
             # "doaj": DOAJConnector(),
+            # "google_scholar": GoogleScholar(),
         }
         self.available_databases = list(self.connectors.keys())
         logger.info(
