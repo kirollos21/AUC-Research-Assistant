@@ -19,11 +19,6 @@ from mistralai.client import MistralClient
 import os
 import hashlib
 
-# Set env vars for the relevant model or load from a .env file:
-import dotenv
-
-dotenv.load_dotenv()
-
 
 # TODO: Make a sub-class of EmbeddingClient
 # Fallback: use Mistral's embeddings API directly (no HF tokenizer)
