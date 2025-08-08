@@ -18,7 +18,12 @@ from langchain_core.messages.base import BaseMessageChunk
 from pydantic import BaseModel, Field, PositiveInt
 
 from app.core.config import SearchEngineName, settings
-from app.schemas.search import FederatedSearchResponse, SearchQuery, SearchResult
+from app.schemas.search import (
+    AccessType,
+    FederatedSearchResponse,
+    SearchQuery,
+    SearchResult,
+)
 from app.services.cohere_reranker import get_cohere_reranker
 from app.services.embedding_client import get_embedding_client
 from app.services.federated_search_service import FederatedSearchService
@@ -62,6 +67,7 @@ class ChatCompletionRequest(BaseModel):
         default=settings.ENABLED_SEARCH_ENGINES,
         description="List of databases to search",
     )
+    access_filter: AccessType | None = None
 
 
 class ChatCompletionChoice(BaseModel):
@@ -484,7 +490,9 @@ async def create_chat_completion(request: ChatCompletionRequest):
             top_k: int = request.top_k or settings.RAG_TOP_K
             top_documents: List[
                 Dict[str, Any]
-            ] = await embedding_client.similarity_search(query=user_query, k=top_k)
+            ] = await embedding_client.similarity_search(
+                query=user_query, k=top_k, access_filter=request.access_filter
+            )
             logger.info(
                 f"Step 4 completed: Retrieved {len(top_documents)} top documents from similarity search"
             )
@@ -535,6 +543,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
                     "url": doc.get("url", ""),
                     "abstract": doc.get("abstract", ""),
                     "score": doc.get("score", 0.0),
+                    "access": doc.get("access", "restricted"),
                 }
                 for doc in top_documents
             ]

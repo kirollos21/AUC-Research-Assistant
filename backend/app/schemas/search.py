@@ -3,7 +3,7 @@ Pydantic schemas for search functionality
 """
 
 from pydantic import model_validator
-from typing import List, Optional, Dict, Any, Literal
+from typing import List, Optional, Dict, Any, Literal, TypeAlias
 from pydantic import BaseModel, Field
 from datetime import datetime
 from app.core.config import SearchEngineName, settings
@@ -63,6 +63,9 @@ class Citation(BaseModel):
     impact_factor: Optional[float] = None
 
 
+AccessType: TypeAlias = Literal["open", "restricted"]
+
+
 class SearchResult(BaseModel):
     """Individual search result schema"""
 
@@ -78,7 +81,7 @@ class SearchResult(BaseModel):
     source_database: str = Field(..., description="Database that provided this result")
     # TODO: resolve these two seemingly functionally-overlapping attributes
     access_info: AccessInfo
-    access: Literal["open", "restricted"] = "restricted"
+    access: AccessType = "restricted"
 
     citation_info: Optional[Citation] = None
     keywords: List[str] = Field(default_factory=list)

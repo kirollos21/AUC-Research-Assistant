@@ -14,7 +14,7 @@ from langchain_huggingface import HuggingFaceEmbeddings
 import chromadb
 from chromadb.config import Settings as ChromaSettings
 from app.core.config import settings
-from app.schemas.search import SearchResult
+from app.schemas.search import AccessType, SearchResult
 import os
 import hashlib
 
@@ -199,7 +199,7 @@ class EmbeddingClient:
         return self.collection_name
 
     async def similarity_search(
-        self, query: str, k: int = 5, access_filter: Optional[str] = None
+        self, query: str, k: int = 5, access_filter: AccessType | None = None
     ) -> List[Dict[str, Any]]:
         """
         Perform similarity search on stored documents

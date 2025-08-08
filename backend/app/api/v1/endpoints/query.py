@@ -12,7 +12,12 @@ import json
 import asyncio
 import logging
 from app.core.config import settings
-from app.schemas.search import SearchQuery, SearchResult, FederatedSearchResponse
+from app.schemas.search import (
+    AccessType,
+    SearchQuery,
+    SearchResult,
+    FederatedSearchResponse,
+)
 from app.services.llm_client import get_llm_client
 from app.services.embedding_client import get_embedding_client
 from app.services.federated_search_service import FederatedSearchService
@@ -35,7 +40,7 @@ class QueryRequest(BaseModel):
     databases: Optional[List[str]] = Field(
         default=None, description="List of databases to search"
     )
-    access_filter: Optional[Literal["open", "restricted"]] = None
+    access_filter: Optional[AccessType] = None
 
 
 class DocumentResult(BaseModel):
@@ -48,7 +53,7 @@ class DocumentResult(BaseModel):
     url: str
     abstract: str
     score: float
-    access: str = "restricted"
+    access: AccessType = "restricted"
 
 
 class QueryResponse(BaseModel):
