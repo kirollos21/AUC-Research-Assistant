@@ -37,19 +37,6 @@ class DatabaseConnector(ABC):
         """
         pass
 
-    @abstractmethod
-    def _normalize_result(self, raw_result: Dict[str, Any]) -> SearchResult:
-        """
-        Normalize raw database result to SearchResult schema
-
-        Args:
-            raw_result: Raw result from database API
-
-        Returns:
-            Normalized SearchResult object
-        """
-        pass
-
     async def health_check(self) -> bool:
         """
         Check if the database is available

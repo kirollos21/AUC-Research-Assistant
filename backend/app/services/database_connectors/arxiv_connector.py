@@ -86,7 +86,7 @@ class ArxivConnector(DatabaseConnector):
             yield result
 
     # TODO: improve typing
-    def _normalize_result(self, raw_result) -> SearchResult:
+    def _normalize_result(self, raw_result: arxiv.Result) -> SearchResult:
         """Normalize arXiv result to SearchResult schema"""
         try:
             # Extract authors
