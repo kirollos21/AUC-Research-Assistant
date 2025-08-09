@@ -3,7 +3,7 @@ Pydantic schemas for search functionality
 """
 
 from pydantic import model_validator
-from typing import List, Optional, Dict, Any, Literal, TypeAlias
+from typing import List, Optional, Dict, Any, Literal, TypeAlias, final
 from pydantic import BaseModel, Field
 from datetime import datetime
 from app.core.config import SearchEngineName, settings
@@ -183,3 +183,62 @@ class SearchMetrics(BaseModel):
 
 
 CitationStyle: TypeAlias = Literal["IEEE", "MLA", "APA", "Chicago"]
+
+
+class EmbeddedDocumentMetadata(BaseModel):
+    """Pydantic model for academic document metadata."""
+
+    title: str = Field(default="Unknown Title", description="Document title")
+    authors: str = Field(
+        default="Unknown Authors", description="Comma-separated list of author names"
+    )
+    abstract: str = "Unkown Abstract"
+    year: str = Field(
+        default="n.d.", description="Publication year or 'n.d.' if not available"
+    )
+    month: str = Field(
+        default="n.d.", description="Publication month or 'n.d.' if not available"
+    )
+    source: str = Field(description="Source database name")
+    url: str = Field(default="", description="Document URL")
+    doc_hash: str = Field(default="", description="Document hash for deduplication")
+    type: Literal["academic_paper"] = Field(
+        default="academic_paper", description="Document type"
+    )
+    access: AccessType = Field(
+        default="restricted", description="Access type - open or restricted"
+    )
+
+    @final
+    class Config:
+        # Allow extra fields in case you need to add more metadata later
+        extra = "allow"
+        # Example of the expected structure
+        json_schema_extra = {
+            "example": {
+                "title": "Machine Learning Applications in Healthcare",
+                "authors": "Smith, J., Doe, A., Johnson, B.",
+                "year": "2023",
+                "month": "5",
+                "source": "PubMed",
+                "url": "https://example.com/paper/123",
+                "doc_hash": "abc123def456",
+                "type": "academic_paper",
+                "access": "open",
+            }
+        }
+
+
+class SentDocument(BaseModel):
+    """This class is the type of the documents sent from the backend to the frontend."""
+
+    content: str
+    score: float
+    title: str
+    authors: str
+    year: str
+    month: str
+    source: str
+    url: str
+    abstract: str
+    access: AccessType

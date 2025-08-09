@@ -2,21 +2,32 @@
 Embedding client service for Mistral integration
 """
 
-from typing import List, Dict, Any, Optional, Union
-from chromadb.api import ClientAPI
-from langchain_core.vectorstores import VectorStore
-from langchain_core.embeddings import Embeddings
-from langchain_mistralai.embeddings import MistralAIEmbeddings
-from langchain_chroma import Chroma
-from langchain_text_splitters import RecursiveCharacterTextSplitter
-from langchain_core.documents import Document
-from langchain_huggingface import HuggingFaceEmbeddings
-import chromadb
-from chromadb.config import Settings as ChromaSettings
-from app.core.config import settings
-from app.schemas.search import AccessType, SearchResult
-import os
 import hashlib
+import logging
+import os
+from typing import Any, Dict, List, Optional, Union, cast
+
+import chromadb
+from chromadb.api import ClientAPI
+from chromadb.config import Settings as ChromaSettings
+from langchain_chroma import Chroma
+from langchain_core.documents import Document as LCDocument
+from langchain_core.embeddings import Embeddings
+from langchain_core.vectorstores import VectorStore
+from langchain_huggingface import HuggingFaceEmbeddings
+from langchain_mistralai.embeddings import MistralAIEmbeddings
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from pydantic import ValidationError
+
+from app.core.config import settings
+from app.schemas.search import (
+    AccessType,
+    EmbeddedDocumentMetadata,
+    SearchResult,
+    SentDocument,
+)
+
+logger = logging.getLogger(__name__)
 
 
 class EmbeddingClient:
@@ -60,7 +71,7 @@ class EmbeddingClient:
         self.collection_name: str = "research_documents"
 
         # Initialize vector store
-        self.vector_store: VectorStore
+        self.vector_store: Chroma
         self._initialize_vector_store()
 
     def _initialize_vector_store(self) -> None:
@@ -108,7 +119,7 @@ class EmbeddingClient:
             return self.collection_name
 
         # Create langchain documents from academic papers
-        langchain_docs: List[Document] = []
+        langchain_docs: List[LCDocument] = []
 
         for doc in documents:
             title: str = doc.title or "Unknown Title"
@@ -117,7 +128,12 @@ class EmbeddingClient:
             authors: List[str] = (
                 [author.name for author in doc.authors] if doc.authors else []
             )
-            year: str = str(doc.publication_date.year) if doc.publication_date else ""
+            year: str = (
+                str(doc.publication_date.year) if doc.publication_date else "n.d."
+            )
+            month: str = (
+                str(doc.publication_date.month) if doc.publication_date else "n.d."
+            )
             source: str = doc.source_database
             url: str = doc.url or ""
 
@@ -128,35 +144,40 @@ class EmbeddingClient:
             content: str = f"Title: {title}\n\nAbstract: {abstract}"
 
             # Create metadata
-            metadata: Dict[str, str] = {
-                "title": title,
-                "authors": ", ".join(authors) if authors else "Unknown Authors",
-                "year": str(year) if year else "Unknown",
-                "source": source,
-                "url": url,
-                "doc_hash": doc_hash,
-                "type": "academic_paper",
-                "access": (
+            metadata: EmbeddedDocumentMetadata = EmbeddedDocumentMetadata(
+                title=title,
+                authors=", ".join(authors) if authors else "Unknown Authors",
+                year=year,
+                abstract=abstract,
+                month=month,
+                source=source,
+                url=url,
+                doc_hash=doc_hash,
+                type="academic_paper",
+                # TODO: verify that this check is needed. If not, get rid of it
+                access=(
                     "open"
                     if getattr(
                         getattr(doc, "access_info", None), "is_open_access", False
                     )
                     else "restricted"
                 ),
-            }
+            )
 
             # Create langchain document
-            langchain_doc: Document = Document(page_content=content, metadata=metadata)
+            langchain_doc: LCDocument = LCDocument(
+                page_content=content, metadata=metadata.model_dump()
+            )
 
             langchain_docs.append(langchain_doc)
 
         # Split documents into chunks
-        split_docs: List[Document] = []
+        split_docs: List[LCDocument] = []
         for doc in langchain_docs:
             # For academic papers, we might want to keep title+abstract together
             # But if they're too long, split them
             if len(doc.page_content) > settings.RAG_CHUNK_SIZE:
-                chunks: List[Document] = self.text_splitter.split_documents([doc])
+                chunks: List[LCDocument] = self.text_splitter.split_documents([doc])
                 split_docs.extend(chunks)
             else:
                 split_docs.append(doc)
@@ -172,12 +193,12 @@ class EmbeddingClient:
                     for meta in existing_docs["metadatas"]
                     if meta and meta.get("doc_hash")
                 }
-        except Exception:
+        except Exception as e:
             # Collection might be empty or not exist yet
-            pass
+            logger.exception(e)
 
         # Filter out duplicates
-        new_docs: List[Document] = [
+        new_docs: List[LCDocument] = [
             doc
             for doc in split_docs
             if doc.metadata.get("doc_hash") not in existing_hashes
@@ -187,9 +208,11 @@ class EmbeddingClient:
         if new_docs:
             try:
                 self.vector_store.add_documents(new_docs)
-                print(f"Added {len(new_docs)} new document chunks to vector store")
+                logger.debug(
+                    f"Added {len(new_docs)} new document chunks to vector store"
+                )
             except Exception as e:
-                print(f"Error adding documents to vector store: {e}")
+                logger.exception(f"Error adding documents to vector store: {e}")
                 # Try to recreate the vector store
                 self._initialize_vector_store()
                 self.vector_store.add_documents(new_docs)
@@ -199,14 +222,17 @@ class EmbeddingClient:
         return self.collection_name
 
     async def similarity_search(
-        self, query: str, k: int = 5, access_filter: AccessType | None = None
-    ) -> List[Dict[str, Any]]:
+        self,
+        query: str,
+        k: int | None = settings.RAG_TOP_K,
+        access_filter: AccessType | None = None,
+    ) -> list[SentDocument]:
         """
         Perform similarity search on stored documents
 
         Args:
             query: Search query
-            k: Number of top results to return
+            k: Number of top results to return. If `None`, will use `settings.RAG_TOP_K`
 
         Returns:
             List of most similar documents with metadata
@@ -226,56 +252,37 @@ class EmbeddingClient:
             )
 
             # Format results
-            formatted_results: List[Dict[str, Any]] = []
-            for doc, score in results:
-                result: Dict[str, Any] = {
-                    "content": doc.page_content,
-                    "score": float(score),
-                    "metadata": doc.metadata,
-                }
+            formatted_results: list[SentDocument] = []
+            for lcdoc, score in results:
+                try:
+                    metadata: EmbeddedDocumentMetadata = EmbeddedDocumentMetadata(
+                        **lcdoc.metadata
+                    )
 
-                # Extract key fields from metadata for easier access
-                metadata: Dict[str, Any] = doc.metadata
-                result.update(
-                    {
-                        "title": metadata.get("title", "Unknown Title"),
-                        "authors": metadata.get("authors", "Unknown Authors"),
-                        "year": metadata.get("year", "Unknown"),
-                        "source": metadata.get("source", "Unknown"),
-                        "url": metadata.get("url", ""),
-                        "abstract": self._extract_abstract_from_content(
-                            doc.page_content
-                        ),
-                        "access": metadata.get("access", "restricted"),
-                    }
-                )
+                    result: SentDocument = SentDocument(
+                        content=lcdoc.page_content,
+                        score=float(score),
+                        title=metadata.title,
+                        year=metadata.year,
+                        month=metadata.month,
+                        authors=metadata.authors,
+                        source=metadata.source,
+                        url=metadata.url,
+                        abstract=metadata.abstract,
+                        access=metadata.access,
+                    )
 
-                formatted_results.append(result)
+                    formatted_results.append(result)
+                except ValidationError as e:
+                    logger.exception(
+                        f"Failed to construct EmbeddedDocumentMetadata from metadata fetched from vector database. Document with metadata {lcdoc.metadata} will not be accounted for in this transaction. Error: {e}"
+                    )
 
             return formatted_results
 
         except Exception as e:
             print(f"Error during similarity search: {e}")
             return []
-
-    def _extract_abstract_from_content(self, content: str) -> str:
-        """Extract abstract from document content"""
-        lines: List[str] = content.split("\n")
-        abstract_lines: List[str] = []
-        found_abstract: bool = False
-
-        for line in lines:
-            if line.strip().startswith("Abstract:"):
-                found_abstract = True
-                abstract_text: str = line.replace("Abstract:", "").strip()
-                if abstract_text:
-                    abstract_lines.append(abstract_text)
-            elif found_abstract and line.strip():
-                abstract_lines.append(line.strip())
-            elif found_abstract and not line.strip():
-                break
-
-        return " ".join(abstract_lines) if abstract_lines else content[:200] + "..."
 
     async def clear_collection(self) -> None:
         """Clear the document collection"""

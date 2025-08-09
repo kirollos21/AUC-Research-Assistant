@@ -15,7 +15,7 @@ from langchain_openai.chat_models import ChatOpenAI
 from langchain_ollama.chat_models import ChatOllama
 from pydantic import BaseModel, Field
 from app.core.config import settings
-from app.schemas.search import CitationStyle
+from app.schemas.search import CitationStyle, SentDocument
 
 
 # TODO: move to more relevant schema file
@@ -318,8 +318,8 @@ Please provide a comprehensive answer to the user's question based on the academ
     # TODO: test different citation styles
     async def generate_rag_response_from_conversation(
         self,
-        context_documents: List[Dict[str, Any]],
         conversation_history: list[ChatMessage],
+        context_documents: list[SentDocument],
         citation_style: CitationStyle = "IEEE",
     ) -> AsyncIterator[BaseMessageChunk]:
         """
@@ -336,15 +336,12 @@ Please provide a comprehensive answer to the user's question based on the academ
         # Format context documents
         context_text: str = ""
         for i, doc in enumerate(context_documents, 1):
-            title: str = doc.get("title", "Unknown Title")
-            abstract: str = doc.get("abstract", "No abstract available")
-            authors: List[str] = doc.get("authors", [])
-            authors_str: str = ", ".join(authors) if authors else "Unknown Authors"
-
             context_text += f"\n--- Document {i} ---\n"
-            context_text += f"Title: {title}\n"
-            context_text += f"Authors: {authors_str}\n"
-            context_text += f"Abstract: {abstract}\n\n"
+            context_text += f"Title: {doc.title}\n"
+            context_text += f"Authors: {doc.authors}\n"
+            context_text += f"Year published: {doc.year}\n"
+            context_text += f"Month published: {doc.month}\n"
+            context_text += f"Abstract: {doc.abstract}\n\n"
 
         # Create system message with context and instructions
         system_prompt = f"""You are an expert academic research assistant. Your task is to answer the user's research question based on the provided academic documents and conversation context.

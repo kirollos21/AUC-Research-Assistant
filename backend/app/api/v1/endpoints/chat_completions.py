@@ -24,6 +24,7 @@ from app.schemas.search import (
     FederatedSearchResponse,
     SearchQuery,
     SearchResult,
+    SentDocument,
 )
 from app.services.cohere_reranker import get_cohere_reranker
 from app.services.embedding_client import get_embedding_client
@@ -490,8 +491,8 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 logger.debug("Sent similarity search start event")
 
             top_k: int = request.top_k or settings.RAG_TOP_K
-            top_documents: List[
-                Dict[str, Any]
+            top_documents: list[
+                SentDocument
             ] = await embedding_client.similarity_search(
                 query=user_query, k=top_k, access_filter=request.access_filter
             )
@@ -524,6 +525,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
                     yield f"data: {event_chunk.model_dump_json()}\n\n"
                     logger.debug("Sent reranking start event")
 
+                # TODO: fix type incompatibility
                 top_documents = await reranker.rerank_documents(
                     query=user_query, documents=top_documents, top_n=top_n
                 )
@@ -535,22 +537,9 @@ async def create_chat_completion(request: ChatCompletionRequest):
             else:
                 logger.info("Step 4.5 skipped: No documents to rerank")
 
-            # Send top documents
-            document_results: List[Dict[str, Any]] = [
-                {
-                    "title": doc.get("title", "Unknown Title"),
-                    "authors": doc.get("authors", "Unknown Authors"),
-                    "year": doc.get("year", "Unknown"),
-                    "source": doc.get("source", "Unknown"),
-                    "url": doc.get("url", ""),
-                    "abstract": doc.get("abstract", ""),
-                    "score": doc.get("score", 0.0),
-                    "access": doc.get("access", "restricted"),
-                }
-                for doc in top_documents
-            ]
-
             if request.stream_events:
+                # Send top documents
+                document_results = [doc.model_dump() for doc in top_documents]
                 document_results_completion_chunk = ChatCompletionChunk(
                     id=completion_id,
                     created=created,
