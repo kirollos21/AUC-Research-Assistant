@@ -10,7 +10,16 @@ import json
 import logging
 import time
 import uuid
-from typing import Any, AsyncIterator, Dict, List, Optional, cast
+from typing import (
+    AsyncIterator,
+    Dict,
+    List,
+    Literal,
+    Optional,
+    TypeAlias,
+    cast,
+    final,
+)
 
 from fastapi import APIRouter, HTTPException
 from fastapi.responses import StreamingResponse
@@ -34,12 +43,14 @@ from app.services.llm_client import ChatMessage, get_llm_client
 logger = logging.getLogger(__name__)
 router = APIRouter()
 
+ChatMessageRole: TypeAlias = Literal["system", "user", "assistant"]
+
 
 class ChatMessageDelta(BaseModel):
     """OpenAI-compatible delta message format for streaming"""
 
-    role: Optional[str] = None
-    content: Optional[str] = None
+    role: ChatMessageRole = "assistant"
+    content: str
 
 
 class ChatCompletionRequest(BaseModel):
@@ -93,6 +104,61 @@ class ChatCompletionChunk(BaseModel):
     system_fingerprint: Optional[str] = None
 
 
+@final
+class SSEComposer:
+    """This class makes it significantly easier and more compact to send server-sent events that are compatible with the OpenAI completions API endpoint"""
+
+    def __init__(
+        self, id: str, creation_timestamp: int, model: str, system_fingerprint: str
+    ):
+        self.id = id
+        self.creation_timestamp = creation_timestamp
+        self.model = model
+        self.system_fingerprint = system_fingerprint
+
+    def send_message(
+        self,
+        message: str,
+        role: ChatMessageRole = "assistant",
+        is_event: bool = False,
+        finish_reason: str | None = None,
+    ) -> str:
+        """Returns data for yielding a normal message or an event. This includes the `data: ` required at the beginning by SSE"""
+        if is_event:
+            message = f"<event>{message}</event>"
+
+        chunk = ChatCompletionChunk(
+            id=self.id,
+            created=self.creation_timestamp,
+            model=self.model,
+            choices=[
+                ChatCompletionChoice(
+                    index=0,
+                    delta=ChatMessageDelta(role=role, content=message),
+                    finish_reason=finish_reason,
+                )
+            ],
+            system_fingerprint=self.system_fingerprint,
+        )
+        return f"data: {chunk.model_dump_json()}\n\n"
+
+    def send_event(
+        self,
+        message: str,
+        role: ChatMessageRole = "assistant",
+        finish_reason: str | None = None,
+    ):
+        return self.send_message(
+            message, role=role, finish_reason=finish_reason, is_event=True
+        )
+
+    def send_stop_message(self) -> str:
+        return self.send_message("", finish_reason="stop")
+
+    def send_done(self) -> str:
+        return "data: [DONE]\n\n"
+
+
 def get_system_fingerprint() -> str:
     """Generate system fingerprint from global settings"""
     settings_dict = settings.model_dump()
@@ -133,6 +199,9 @@ async def create_chat_completion(request: ChatCompletionRequest):
         completion_id = str(uuid.uuid4())
         created = int(time.time())
         system_fingerprint = get_system_fingerprint()
+        sse_composer = SSEComposer(
+            completion_id, created, request.model, system_fingerprint
+        )
 
         try:
             logger.info(
@@ -142,21 +211,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 f"Request parameters - model: {request.model}, stream_events: {request.stream_events}, max_results: {request.max_results}, top_k: {request.top_k}"
             )
 
-            # Send initial empty assistant message
-            initial_chunk = ChatCompletionChunk(
-                id=completion_id,
-                created=created,
-                model=request.model,
-                choices=[
-                    ChatCompletionChoice(
-                        index=0,
-                        delta=ChatMessageDelta(role="assistant", content=""),
-                        finish_reason=None,
-                    )
-                ],
-                system_fingerprint=system_fingerprint,
-            )
-            yield f"data: {initial_chunk.model_dump_json()}\n\n"
+            yield sse_composer.send_message("")
 
             logger.debug("Sent initial assistant message chunk")
 
@@ -172,22 +227,9 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 logger.info("First message detected - generating clarification request")
 
                 if request.stream_events:
-                    event_chunk = ChatCompletionChunk(
-                        id=completion_id,
-                        created=created,
-                        model=request.model,
-                        choices=[
-                            ChatCompletionChoice(
-                                index=0,
-                                delta=ChatMessageDelta(
-                                    content="<event>Analyzing query for clarifications...</event>"
-                                ),
-                                finish_reason=None,
-                            )
-                        ],
-                        system_fingerprint=system_fingerprint,
+                    yield sse_composer.send_event(
+                        "Analyzing query for clarifications..."
                     )
-                    yield f"data: {event_chunk.model_dump_json()}\n\n"
 
                 # Generate streaming clarification response
                 clarification_stream = await llm_client.generate_clarification_request(
@@ -200,41 +242,14 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 chunk_count = 0
                 async for chunk in clarification_stream:
                     chunk_count += 1
-                    chunk_data = ChatCompletionChunk(
-                        id=completion_id,
-                        created=created,
-                        model=request.model,
-                        choices=[
-                            ChatCompletionChoice(
-                                index=0,
-                                delta=ChatMessageDelta(
-                                    content=cast(str, chunk.content)
-                                ),
-                                finish_reason=None,
-                            )
-                        ],
-                        system_fingerprint=system_fingerprint,
-                    )
-                    yield f"data: {chunk_data.model_dump_json()}\n\n"
+                    yield sse_composer.send_message(cast(str, chunk.content))
 
                 logger.info(
                     f"Generated clarification response with {chunk_count} chunks"
                 )
 
-                # Send final chunk
-                final_chunk = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0, delta=ChatMessageDelta(), finish_reason="stop"
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
-                )
-                yield f"data: {final_chunk.model_dump_json()}\n\n"
-                yield "data: [DONE]\n\n"
+                yield sse_composer.send_stop_message()
+                yield sse_composer.send_done()
                 logger.info("First message clarification completed")
                 return
 
@@ -242,22 +257,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
             logger.info("Step 1: Starting database query generation")
 
             if request.stream_events:
-                event_chunk = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0,
-                            delta=ChatMessageDelta(
-                                content="<event>Generating search queries...</event>"
-                            ),
-                            finish_reason=None,
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
-                )
-                yield f"data: {event_chunk.model_dump_json()}\n\n"
+                yield sse_composer.send_event("Generating search queries...")
                 logger.debug("Sent query generation start event")
 
             database_queries: List[
@@ -270,23 +270,9 @@ async def create_chat_completion(request: ChatCompletionRequest):
             )
 
             if request.stream_events:
-                queries_info = (
-                    f"<event>Generated {len(database_queries)} search queries</event>"
+                yield sse_composer.send_event(
+                    f"Generated {len(database_queries)} search queries"
                 )
-                event_chunk = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0,
-                            delta=ChatMessageDelta(content=queries_info),
-                            finish_reason=None,
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
-                )
-                yield f"data: {event_chunk.model_dump_json()}\n\n"
                 logger.debug(
                     f"Sent query generation completion event: {len(database_queries)} queries"
                 )
@@ -295,22 +281,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
             logger.info("Step 2: Starting database search")
 
             if request.stream_events:
-                event_chunk = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0,
-                            delta=ChatMessageDelta(
-                                content="<event>Searching academic databases...</event>"
-                            ),
-                            finish_reason=None,
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
-                )
-                yield f"data: {event_chunk.model_dump_json()}\n\n"
+                yield sse_composer.send_event("Searching academic databases...")
                 logger.debug("Sent database search start event")
 
             all_documents: List[SearchResult] = []
@@ -323,21 +294,9 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 )
 
                 if request.stream_events:
-                    search_event = f"<event>Searching with query {i + 1}/{len(database_queries)}: {query_info['focus']}</event>"
-                    event_chunk = ChatCompletionChunk(
-                        id=completion_id,
-                        created=created,
-                        model=request.model,
-                        choices=[
-                            ChatCompletionChoice(
-                                index=0,
-                                delta=ChatMessageDelta(content=search_event),
-                                finish_reason=None,
-                            )
-                        ],
-                        system_fingerprint=system_fingerprint,
+                    yield sse_composer.send_event(
+                        f"Searching with query {i + 1}/{len(database_queries)}: {query_info['focus']}"
                     )
-                    yield f"data: {event_chunk.model_dump_json()}\n\n"
                     logger.debug(f"Sent search progress event for query {i + 1}")
 
                 try:
@@ -360,23 +319,9 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 except Exception as e:
                     logger.error(f"Search {i + 1} failed: {str(e)}")
                     if request.stream_events:
-                        error_event = (
-                            f"<event>Error searching with query: {str(e)}</event>"
+                        yield sse_composer.send_event(
+                            f"Error searching with query: {str(e)}"
                         )
-                        event_chunk = ChatCompletionChunk(
-                            id=completion_id,
-                            created=created,
-                            model=request.model,
-                            choices=[
-                                ChatCompletionChoice(
-                                    index=0,
-                                    delta=ChatMessageDelta(content=error_event),
-                                    finish_reason=None,
-                                )
-                            ],
-                            system_fingerprint=system_fingerprint,
-                        )
-                        yield f"data: {event_chunk.model_dump_json()}\n\n"
                         logger.debug(f"Sent error event for search {i + 1}")
                     continue
 
@@ -399,45 +344,16 @@ async def create_chat_completion(request: ChatCompletionRequest):
             )
 
             if request.stream_events:
-                found_event = (
-                    f"<event>Found {len(unique_documents)} unique documents</event>"
+                yield sse_composer.send_event(
+                    f"Found {len(unique_documents)} unique documents"
                 )
-                event_chunk = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0,
-                            delta=ChatMessageDelta(content=found_event),
-                            finish_reason=None,
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
-                )
-                yield f"data: {event_chunk.model_dump_json()}\n\n"
                 logger.debug("Sent document count event")
 
             # Step 3: Process and embed documents
             logger.info("Step 3: Starting document processing and embedding")
 
             if request.stream_events:
-                event_chunk = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0,
-                            delta=ChatMessageDelta(
-                                content="<event>Processing and embedding documents...</event>"
-                            ),
-                            finish_reason=None,
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
-                )
-                yield f"data: {event_chunk.model_dump_json()}\n\n"
+                yield sse_composer.send_event("Processing and embedding documents...")
                 logger.debug("Sent document processing start event")
 
             if unique_documents:
@@ -452,22 +368,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
             logger.info("Step 4: Starting similarity search for top-k documents")
 
             if request.stream_events:
-                event_chunk = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0,
-                            delta=ChatMessageDelta(
-                                content="<event>Finding most relevant documents...</event>"
-                            ),
-                            finish_reason=None,
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
-                )
-                yield f"data: {event_chunk.model_dump_json()}\n\n"
+                yield sse_composer.send_event("Finding most relevant documents...")
                 logger.debug("Sent similarity search start event")
 
             top_k: int = request.top_k or settings.RAG_TOP_K
@@ -487,22 +388,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 logger.info("Step 4.5: Starting document reranking with Cohere")
 
                 if request.stream_events:
-                    event_chunk = ChatCompletionChunk(
-                        id=completion_id,
-                        created=created,
-                        model=request.model,
-                        choices=[
-                            ChatCompletionChoice(
-                                index=0,
-                                delta=ChatMessageDelta(
-                                    content="<event>Reranking documents with Cohere...</event>"
-                                ),
-                                finish_reason=None,
-                            )
-                        ],
-                        system_fingerprint=system_fingerprint,
-                    )
-                    yield f"data: {event_chunk.model_dump_json()}\n\n"
+                    yield sse_composer.send_event("Reranking documents with Cohere...")
                     logger.debug("Sent reranking start event")
 
                 # TODO: fix type incompatibility
@@ -520,43 +406,15 @@ async def create_chat_completion(request: ChatCompletionRequest):
             if request.stream_events:
                 # Send top documents
                 document_results = [doc.model_dump() for doc in top_documents]
-                document_results_completion_chunk = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0,
-                            delta=ChatMessageDelta(
-                                content=f"<event>documents:{json.dumps(document_results)}</event>"
-                            ),
-                            finish_reason=None,
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
+                yield sse_composer.send_event(
+                    f"documents:{json.dumps(document_results)}"
                 )
-                yield f"data: {document_results_completion_chunk.model_dump_json()}\n\n"
 
             # Step 5: Generate streaming LLM response
             logger.info("Step 5: Starting LLM response generation")
 
             if request.stream_events:
-                event_chunk = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0,
-                            delta=ChatMessageDelta(
-                                content="<event>Generating response...</event>"
-                            ),
-                            finish_reason=None,
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
-                )
-                yield f"data: {event_chunk.model_dump_json()}\n\n"
+                yield sse_composer.send_event("Generating response...")
                 logger.debug("Sent response generation start event")
 
             if top_documents:
@@ -571,22 +429,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 chunk_count: PositiveInt = 0
                 async for chunk in llm_response_gen:
                     chunk_count += 1
-                    chunk_data = ChatCompletionChunk(
-                        id=completion_id,
-                        created=created,
-                        model=request.model,
-                        choices=[
-                            ChatCompletionChoice(
-                                index=0,
-                                delta=ChatMessageDelta(
-                                    content=cast(str, chunk.content)
-                                ),
-                                finish_reason=None,
-                            )
-                        ],
-                        system_fingerprint=system_fingerprint,
-                    )
-                    yield f"data: {chunk_data.model_dump_json()}\n\n"
+                    yield sse_composer.send_message(cast(str, chunk.content))
 
                 logger.info(
                     f"Step 5 completed: Generated response with {chunk_count} chunks"
@@ -594,59 +437,23 @@ async def create_chat_completion(request: ChatCompletionRequest):
 
             else:  # if not top_documents
                 logger.warning("Step 5: No documents found, sending fallback message")
-                error_message: str = "I couldn't find relevant academic documents to answer your question. Please try rephrasing your query or being more specific about the research area."
-                chunk_data = ChatCompletionChunk(
-                    id=completion_id,
-                    created=created,
-                    model=request.model,
-                    choices=[
-                        ChatCompletionChoice(
-                            index=0,
-                            delta=ChatMessageDelta(content=error_message),
-                            finish_reason=None,
-                        )
-                    ],
-                    system_fingerprint=system_fingerprint,
+                yield sse_composer.send_message(
+                    "I couldn't find relevant academic documents to answer your question. Please try rephrasing your query or being more specific about the research area."
                 )
-                yield f"data: {chunk_data.model_dump_json()}\n\n"
                 logger.info("Sent fallback message for no documents found")
 
             # Send final chunk with finish_reason
             logger.info("Sending final completion chunk")
-            final_chunk = ChatCompletionChunk(
-                id=completion_id,
-                created=created,
-                model=request.model,
-                choices=[
-                    ChatCompletionChoice(
-                        index=0, delta=ChatMessageDelta(), finish_reason="stop"
-                    )
-                ],
-                system_fingerprint=system_fingerprint,
-            )
-            yield f"data: {final_chunk.model_dump_json()}\n\n"
-            yield "data: [DONE]\n\n"
+            yield sse_composer.send_stop_message()
+            yield sse_composer.send_done()
             logger.info("Chat completion stream finished successfully")
 
         except Exception as e:
             logger.exception(f"Error in OpenAI-compatible streaming: {e}")
-            error_chunk = ChatCompletionChunk(
-                id=completion_id,
-                created=created,
-                model=request.model,
-                choices=[
-                    ChatCompletionChoice(
-                        index=0,
-                        delta=ChatMessageDelta(
-                            content=f"Error processing query: {str(e)}"
-                        ),
-                        finish_reason="stop",
-                    )
-                ],
-                system_fingerprint=system_fingerprint,
+            yield sse_composer.send_message(
+                f"Error processing query: {str(e)}", finish_reason="stop"
             )
-            yield f"data: {error_chunk.model_dump_json()}\n\n"
-            yield "data: [DONE]\n\n"
+            yield sse_composer.send_done()
             logger.error("Chat completion stream ended with error")
 
     return StreamingResponse(
