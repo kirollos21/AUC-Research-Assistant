@@ -82,26 +82,6 @@ class ChatCompletionChoice(BaseModel):
     finish_reason: Optional[str] = None
 
 
-class ChatCompletionUsage(BaseModel):
-    """OpenAI-compatible usage statistics"""
-
-    prompt_tokens: int
-    completion_tokens: int
-    total_tokens: int
-
-
-class ChatCompletionResponse(BaseModel):
-    """OpenAI-compatible chat completion response"""
-
-    id: str
-    object: str = "chat.completion"
-    created: int
-    model: str
-    choices: List[ChatCompletionChoice]
-    usage: Optional[ChatCompletionUsage] = None
-    system_fingerprint: Optional[str] = None
-
-
 class ChatCompletionChunk(BaseModel):
     """OpenAI-compatible streaming chunk"""
 
