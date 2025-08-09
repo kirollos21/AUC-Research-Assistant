@@ -15,6 +15,7 @@ from langchain_openai.chat_models import ChatOpenAI
 from langchain_ollama.chat_models import ChatOllama
 from pydantic import BaseModel, Field
 from app.core.config import settings
+from app.schemas.search import CitationStyle
 
 
 # TODO: move to more relevant schema file
@@ -314,10 +315,12 @@ Please provide a comprehensive answer to the user's question based on the academ
         return self.llm.astream(messages)
 
     # TODO: maybe pass the entire document along if possible and not just the title, authors, and abstract?
+    # TODO: test different citation styles
     async def generate_rag_response_from_conversation(
         self,
-        conversation_history: List[ChatMessage],
         context_documents: List[Dict[str, Any]],
+        conversation_history: list[ChatMessage],
+        citation_style: CitationStyle = "IEEE",
     ) -> AsyncIterator[BaseMessageChunk]:
         """
         Generate response using retrieved documents as context and the entire conversation history.
@@ -350,7 +353,7 @@ Guidelines:
 - Use only the information from the provided documents
 - Consider the conversation history to understand context and any clarifications
 - Focus your answer on the user's LATEST question while being informed by the conversation context
-- Cite specific papers when making claims (use document index for citation with IEEE style, like [1] or [2-5])
+- Cite specific papers when making claims (use the {citation_style} citation style)
 - If the documents don't contain enough information to answer the question, say so
 - Provide a comprehensive answer that synthesizes information from multiple sources
 - Maintain academic tone and accuracy

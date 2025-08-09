@@ -20,6 +20,7 @@ from pydantic import BaseModel, Field, PositiveInt
 from app.core.config import SearchEngineName, settings
 from app.schemas.search import (
     AccessType,
+    CitationStyle,
     FederatedSearchResponse,
     SearchQuery,
     SearchResult,
@@ -68,6 +69,7 @@ class ChatCompletionRequest(BaseModel):
         description="List of databases to search",
     )
     access_filter: AccessType | None = None
+    citation_style: CitationStyle = "IEEE"
 
 
 class ChatCompletionChoice(BaseModel):
@@ -594,6 +596,7 @@ async def create_chat_completion(request: ChatCompletionRequest):
                 ] = await llm_client.generate_rag_response_from_conversation(
                     conversation_history=conversation_history,
                     context_documents=top_documents,
+                    citation_style=request.citation_style,
                 )
 
                 chunk_count: PositiveInt = 0

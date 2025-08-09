@@ -180,3 +180,6 @@ class SearchMetrics(BaseModel):
     successful_databases: List[str]
     failed_databases: List[str]
     user_satisfaction: Optional[float] = None  # 0-5 rating
+
+
+CitationStyle: TypeAlias = Literal["IEEE", "MLA", "APA", "Chicago"]
