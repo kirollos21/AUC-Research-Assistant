@@ -77,8 +77,7 @@ class ChatCompletionChoice(BaseModel):
     """OpenAI-compatible choice format"""
 
     index: int
-    message: Optional[ChatMessage] = None
-    delta: Optional[ChatMessageDelta] = None
+    delta: ChatMessageDelta
     finish_reason: Optional[str] = None
 
 
