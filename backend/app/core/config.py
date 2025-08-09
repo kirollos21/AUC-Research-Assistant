@@ -113,6 +113,9 @@ class Settings(BaseSettings):
     # based tokenizer that is not optimized. More can be found here https://github.com/langchain-ai/langchain/issues/20618
     HF_TOKEN: Optional[str] = None
 
+    # If set to true, in completions API endpoint, will stream events even when the client request does not include the `stream_events` field in the request
+    STREAM_EVENTS_BY_DEFAULT: bool = False
+
     class Config:
         env_file = ".env"
         case_sensitive = True

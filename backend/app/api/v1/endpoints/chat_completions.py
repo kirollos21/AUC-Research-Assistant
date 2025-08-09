@@ -57,7 +57,8 @@ class ChatCompletionRequest(BaseModel):
 
     # Custom parameters for our research assistant
     stream_events: bool = Field(
-        default=False, description="Stream internal research events"
+        default=settings.STREAM_EVENTS_BY_DEFAULT,
+        description="Stream internal research events",
     )
     max_results: Optional[int] = Field(
         default=None, description="Maximum results per database"
