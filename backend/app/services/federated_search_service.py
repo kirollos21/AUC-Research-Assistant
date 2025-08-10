@@ -279,30 +279,6 @@ class FederatedSearchService:
             logger.exception(f"Failed to calculate recency score: {e}")
             return 0.5
 
-    def _calculate_citation_score(self, citation_info) -> float:
-        """Calculate citation score (0-1, higher = more cited)"""
-        if not citation_info or not citation_info.count:
-            return 0.5  # Neutral score for unknown citations
-
-        try:
-            # Simple logarithmic scaling for citation counts
-            # This is a placeholder - adjust based on field-specific norms
-            citation_count = citation_info.count
-            if citation_count >= 1000:
-                return 1.0
-            elif citation_count >= 100:
-                return 0.8
-            elif citation_count >= 10:
-                return 0.6
-            elif citation_count >= 1:
-                return 0.4
-            else:
-                return 0.2
-
-        except Exception as e:
-            logger.exception(f"Failed to calculate citation score: {e}")
-            return 0.5
-
     async def get_database_status(self) -> List[DatabaseStatus]:
         """Get status of all database connectors"""
         status_list = []
