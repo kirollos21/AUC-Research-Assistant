@@ -2,28 +2,33 @@
 Semantic Scholar database connector for federated search
 """
 
-import asyncio
 import logging
-from typing import List, Dict, Any, Optional
 from datetime import datetime
+from typing import Any, Dict, List, Optional, final, override
+
 import httpx
 
+from app.core.config import SearchEngineName, settings
+from app.schemas.search import AccessInfo, Author, Citation, SearchQuery, SearchResult
 from app.services.database_connectors.base import DatabaseConnector
-from app.schemas.search import SearchResult, SearchQuery, Author, AccessInfo, Citation
-from app.core.config import settings
-
 
 logger = logging.getLogger(__name__)
 
 
+@final
 class SemanticScholarConnector(DatabaseConnector):
     """Connector for Semantic Scholar academic search API"""
 
     def __init__(self):
-        super().__init__("semantic_scholar", "https://api.semanticscholar.org")
+        super().__init__()
         self.api_key = settings.SEMANTIC_SCHOLAR_API_KEY
         self.base_url = "https://api.semanticscholar.org/graph/v1"
 
+    @override
+    def get_name(self) -> SearchEngineName:
+        return "semantic_scholar"
+
+    @override
     async def search(self, query: SearchQuery) -> List[SearchResult]:
         """Search Semantic Scholar database"""
         logger.debug(f"Starting semantic scholar search with query {query}")
@@ -72,7 +77,7 @@ class SemanticScholarConnector(DatabaseConnector):
                     )
                     return results
                 else:
-                    logger.error(
+                    logger.exception(
                         f"Semantic Scholar API error: {response.status_code} - {response.text}"
                     )
                     return []
@@ -276,6 +281,7 @@ class SemanticScholarConnector(DatabaseConnector):
         else:
             return "article"
 
+    @override
     async def _perform_health_check(self):
         """Perform Semantic Scholar-specific health check"""
         try:

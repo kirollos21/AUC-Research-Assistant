@@ -2,14 +2,14 @@
 Base database connector class for federated search
 """
 
-from abc import ABC, abstractmethod
-from typing import List, Dict, Any, Optional
 import asyncio
 import logging
+from abc import ABC, abstractmethod
 from datetime import datetime
+from typing import Any, Dict, List, Optional
 
-from app.schemas.search import SearchResult, SearchQuery
-
+from app.core.config import SearchEngineName
+from app.schemas.search import SearchQuery, SearchResult
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +17,16 @@ logger = logging.getLogger(__name__)
 class DatabaseConnector(ABC):
     """Abstract base class for database connectors"""
 
-    def __init__(self, name: str, base_url: str):
-        self.name = name
-        self.base_url = base_url
-        self.is_available = True
-        self.last_error = None
-        self.response_time_ms = None
+    def __init__(self):
+        self.name: str = self.get_name()
+        """NOTE: this is deprecated. Use `self.get_name()` instead"""
+        self.is_available: bool = True
+        self.last_error: str | None = None
+        self.response_time_ms: int | None = None
+
+    @abstractmethod
+    def get_name(self) -> SearchEngineName:
+        pass
 
     @abstractmethod
     async def search(self, query: SearchQuery) -> List[SearchResult]:

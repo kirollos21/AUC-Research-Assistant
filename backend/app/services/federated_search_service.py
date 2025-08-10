@@ -3,26 +3,25 @@ Federated Search Service - Orchestrates searches across multiple academic databa
 """
 
 import asyncio
-import logging
-from typing import List, Dict, Any, Optional, final
-from datetime import datetime
 import hashlib
-from collections import defaultdict
+import logging
+from collections.abc import Coroutine
+from datetime import datetime
+from typing import Any, List, Optional, final
 
+from app.core.config import SearchEngineName, settings
+from app.schemas.search import (
+    DatabaseStatus,
+    FederatedSearchResponse,
+    SearchQuery,
+    SearchResult,
+    SearchStats,
+)
 from app.services.database_connectors.arxiv_connector import ArxivConnector
+from app.services.database_connectors.base import DatabaseConnector
 from app.services.database_connectors.semantic_scholar_connector import (
     SemanticScholarConnector,
 )
-from app.schemas.search import (
-    SearchQuery,
-    SearchResult,
-    FederatedSearchResponse,
-    SearchStats,
-    DatabaseStatus,
-)
-from app.services.database_connectors.base import DatabaseConnector
-from app.core.config import SearchEngineName, settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +31,16 @@ class FederatedSearchService:
     """Service for coordinating federated search across academic databases"""
 
     def __init__(self):
-        self.connectors: Dict[SearchEngineName, DatabaseConnector] = {
-            "arxiv": ArxivConnector(),
-            "semantic_scholar": SemanticScholarConnector(),
-            # Add more connectors as they're implemented
-            # "pubmed": PubmedConnector(),
-            # "crossref": CrossrefConnector(),
-            # "doaj": DOAJConnector(),
-            # "google_scholar": GoogleScholar(),
+        db_name_to_constructor_map: dict[SearchEngineName, type[DatabaseConnector]] = {
+            "arxiv": ArxivConnector,
+            "semantic_scholar": SemanticScholarConnector,
+            # "pubmed": PubmedConnector,
+            # "crossref": CrossrefConnector,
+            # "doaj": DOAJConnector,
+        }
+        self.connectors: dict[SearchEngineName, DatabaseConnector] = {
+            db_name: db_name_to_constructor_map[db_name]()
+            for db_name in settings.ENABLED_SEARCH_ENGINES
         }
         self.available_databases = list(self.connectors.keys())
         logger.info(
@@ -66,7 +67,9 @@ class FederatedSearchService:
             logger.info(f"Searching in databases {databases_to_search}")
 
             # Execute searches in parallel
-            search_tasks = []
+            search_tasks: list[
+                tuple[SearchEngineName, Coroutine[Any, Any, list[SearchResult]]]
+            ] = []
             for db_name in databases_to_search:
                 if db_name in self.connectors:
                     connector = self.connectors[db_name]
@@ -281,7 +284,7 @@ class FederatedSearchService:
 
     async def get_database_status(self) -> List[DatabaseStatus]:
         """Get status of all database connectors"""
-        status_list = []
+        status_list: list[DatabaseStatus] = []
 
         for name, connector in self.connectors.items():
             try:
