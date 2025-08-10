@@ -19,6 +19,7 @@ from app.schemas.search import (
 )
 from app.services.database_connectors.arxiv_connector import ArxivConnector
 from app.services.database_connectors.base import DatabaseConnector
+from app.services.database_connectors.searxng import SearxNGConnector
 from app.services.database_connectors.semantic_scholar_connector import (
     SemanticScholarConnector,
 )
@@ -34,6 +35,7 @@ class FederatedSearchService:
         db_name_to_constructor_map: dict[SearchEngineName, type[DatabaseConnector]] = {
             "arxiv": ArxivConnector,
             "semantic_scholar": SemanticScholarConnector,
+            "searxng": SearxNGConnector,
             # "pubmed": PubmedConnector,
             # "crossref": CrossrefConnector,
             # "doaj": DOAJConnector,
