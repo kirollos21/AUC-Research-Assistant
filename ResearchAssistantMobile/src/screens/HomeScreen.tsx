@@ -22,6 +22,7 @@ import {
 import Markdown from 'react-native-markdown-display';
 import { ApiService } from '../services/api';
 import { Document, CitationStyle, StreamingResponse, ChatMessage } from '../types/search';
+import { useAppTheme } from '../utils/themeContext';
 import CitationPreview from '../components/CitationPreview';
 
 const MAX_DOCS = 10;
@@ -41,7 +42,7 @@ export default function HomeScreen({ navigation }: any) {
   const [accessFilter, setAccessFilter] = useState<'open' | 'restricted' | 'all'>('all');
 
   const colorScheme = useColorScheme();
-  const isDarkMode = colorScheme === 'dark';
+  const { isDarkMode, themeMode, setThemeMode } = useAppTheme();
   const theme = useTheme();
 
   const handleSearch = async () => {
@@ -242,6 +243,16 @@ export default function HomeScreen({ navigation }: any) {
               >
                 Restricted
               </Chip>
+            </View>
+          </View>
+
+          {/* Theme Mode */}
+          <View style={{ marginTop: 12 }}>
+            <Text style={{ marginBottom: 8, color: themeStyles.secondaryTextColor }}>Appearance</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Chip selected={themeMode === 'system'} onPress={() => setThemeMode('system')}>System</Chip>
+              <Chip selected={themeMode === 'light'} onPress={() => setThemeMode('light')}>Light</Chip>
+              <Chip selected={themeMode === 'dark'} onPress={() => setThemeMode('dark')}>Dark</Chip>
             </View>
           </View>
 
