@@ -60,7 +60,7 @@ def setup_logging() -> None:
 
     # Create formatters
     formatter = AnsiColorFormatter(
-        fmt=settings.LOG_FORMAT, datefmt="%Y-%m-%d %H:%M:%S", style="{"
+        fmt=settings.LOG_FORMAT, datefmt="%Y-%m-%d %H:%M:%S"
     )
 
     # Create handlers

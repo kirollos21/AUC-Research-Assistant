@@ -179,11 +179,20 @@ cd AUC-Research-Assistant
 # Navigate to backend directory
 cd backend
 
-# Sync uv environment
-uv sync
+# Create virtual environment
+python -m venv venv
 
-# Run app with uv
-uv run main.py
+# Activate virtual environment
+# Windows:
+venv\Scripts\activate
+# macOS/Linux:
+source venv/bin/activate
+
+# Install dependencies manually
+pip install fastapi uvicorn pydantic pydantic-settings arxiv httpx openai requests google-generativeai numpy scikit-learn sentence-transformers langchain langchain-mistralai mistralai chromadb langchain-chroma cohere python-dotenv langchain-core langchain-text-splitters langchain_ollama langchain_huggingface
+
+# Run the development server
+python main.py
 ```
 
 #### 3. Frontend Setup
@@ -191,10 +200,10 @@ uv run main.py
 # Open new terminal and navigate to frontend directory
 cd frontend
 
-# Install dependencies (25 packages)
+# Install dependencies
 npm install
 
-# Run the development server with Turbopack
+# Run the development server
 npm run dev
 ```
 
