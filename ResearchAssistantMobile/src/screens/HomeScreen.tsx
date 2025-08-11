@@ -21,7 +21,7 @@ import {
 } from 'react-native-paper';
 import Markdown from 'react-native-markdown-display';
 import { ApiService } from '../services/api';
-import { Document, CitationStyle, StreamingResponse } from '../types/search';
+import { Document, CitationStyle, StreamingResponse, ChatMessage } from '../types/search';
 import CitationPreview from '../components/CitationPreview';
 
 const MAX_DOCS = 10;
@@ -35,6 +35,9 @@ export default function HomeScreen({ navigation }: any) {
   const [error, setError] = useState('');
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('APA');
   const [activeTab, setActiveTab] = useState<'response' | 'documents'>('response');
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
+    { role: 'system', content: 'You are an academic assistant' },
+  ]);
   const [accessFilter, setAccessFilter] = useState<'open' | 'restricted' | 'all'>('all');
 
   const colorScheme = useColorScheme();
@@ -98,6 +101,64 @@ export default function HomeScreen({ navigation }: any) {
     }
   };
 
+  const handleSendChat = async () => {
+    const trimmed = query.trim();
+    if (!trimmed) return;
+    setActiveTab('response');
+    setIsLoading(true);
+    setError('');
+    setResponse('');
+    setDocuments([]);
+
+    const nextMessages = [...chatMessages, { role: 'user' as const, content: trimmed }];
+    setChatMessages(nextMessages);
+    setQuery('');
+
+    let accumulated = '';
+    try {
+      await ApiService.chatCompletionsStream(
+        nextMessages,
+        (chunk) => {
+          accumulated += chunk;
+          setResponse(accumulated);
+        },
+        (eventText) => {
+          // handle events: status and documents
+          if (!eventText) return;
+          const trimmedEvent = eventText.trim();
+          if (trimmedEvent.startsWith('documents:')) {
+            try {
+              const json = trimmedEvent.replace(/^documents:\s*/i, '');
+              const docs: any[] = JSON.parse(json);
+              const mapped: Document[] = docs.map((d) => ({
+                title: d.title ?? 'Unknown Title',
+                authors: d.authors ?? 'Unknown Authors',
+                year: d.year ?? 'Unknown',
+                source: d.source ?? 'Unknown',
+                url: d.url ?? '',
+                abstract: d.abstract ?? '',
+                score: Number(d.score ?? 0),
+              }));
+              setDocuments(mapped);
+            } catch (_) {}
+          } else {
+            setStatus(trimmedEvent.replace(/<[^>]+>/g, ''));
+          }
+        },
+        {
+          access_filter: accessFilter === 'all' ? undefined : accessFilter,
+        }
+      );
+
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: accumulated }]);
+    } catch (e) {
+      setError('An error occurred with the connection.');
+    } finally {
+      setIsLoading(false);
+      setStatus('');
+    }
+  };
+
   const handleOpenUrl = (url: string) => {
     Linking.openURL(url).catch(() => {
       Alert.alert('Error', 'Could not open the link');
@@ -145,17 +206,17 @@ export default function HomeScreen({ navigation }: any) {
               onChangeText={setQuery}
               placeholder="Enter your research query..."
               style={styles.searchInput}
-              onSubmitEditing={handleSearch}
+              onSubmitEditing={handleSendChat}
               multiline={false}
             />
             <Button
               mode="contained"
-              onPress={handleSearch}
+              onPress={handleSendChat}
               loading={isLoading}
               disabled={isLoading}
               style={styles.searchButton}
             >
-              {isLoading ? 'Searching...' : 'Search'}
+              {isLoading ? 'Sending...' : 'Send'}
             </Button>
           </View>
 

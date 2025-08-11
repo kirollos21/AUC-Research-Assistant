@@ -35,6 +35,13 @@ export interface StreamingResponse {
   total_documents?: number;
 }
 
+export type ChatMessageRole = 'system' | 'user' | 'assistant';
+
+export interface ChatMessage {
+  role: ChatMessageRole;
+  content: string;
+}
+
 export interface AuthState {
   isAuthenticated: boolean;
   user: User | null;
