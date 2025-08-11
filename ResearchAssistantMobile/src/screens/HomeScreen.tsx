@@ -35,6 +35,7 @@ export default function HomeScreen({ navigation }: any) {
   const [error, setError] = useState('');
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('APA');
   const [activeTab, setActiveTab] = useState<'response' | 'documents'>('response');
+  const [accessFilter, setAccessFilter] = useState<'open' | 'restricted' | 'all'>('all');
 
   const colorScheme = useColorScheme();
   const isDarkMode = colorScheme === 'dark';
@@ -85,6 +86,9 @@ export default function HomeScreen({ navigation }: any) {
         },
         () => {
           setIsLoading(false);
+        },
+        {
+          access_filter: accessFilter === 'all' ? undefined : accessFilter,
         }
       );
     } catch (err) {
@@ -153,6 +157,31 @@ export default function HomeScreen({ navigation }: any) {
             >
               {isLoading ? 'Searching...' : 'Search'}
             </Button>
+          </View>
+
+          {/* Filters */}
+          <View style={{ marginTop: 12 }}>
+            <Text style={{ marginBottom: 8, color: themeStyles.secondaryTextColor }}>Access filter</Text>
+            <View style={{ flexDirection: 'row', gap: 8 }}>
+              <Chip
+                selected={accessFilter === 'all'}
+                onPress={() => setAccessFilter('all')}
+              >
+                All
+              </Chip>
+              <Chip
+                selected={accessFilter === 'open'}
+                onPress={() => setAccessFilter('open')}
+              >
+                Open
+              </Chip>
+              <Chip
+                selected={accessFilter === 'restricted'}
+                onPress={() => setAccessFilter('restricted')}
+              >
+                Restricted
+              </Chip>
+            </View>
           </View>
 
           {error && (

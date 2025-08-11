@@ -7,13 +7,16 @@ export class ApiService {
     query: string,
     onData: (data: StreamingResponse) => void,
     onError: (error: string) => void,
-    onComplete: () => void
+    onComplete: () => void,
+    options?: { access_filter?: 'open' | 'restricted'; databases?: string[]; max_results?: number; top_k?: number }
   ): Promise<void> {
     try {
       const payload: SearchQuery = {
         query: query.trim(),
-        max_results: 10,
-        top_k: 10,
+        max_results: options?.max_results ?? 10,
+        top_k: options?.top_k ?? 10,
+        databases: options?.databases,
+        access_filter: options?.access_filter,
       };
 
       const response = await fetch(API_BASE_URL, {

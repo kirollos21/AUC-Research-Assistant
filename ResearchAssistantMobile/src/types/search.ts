@@ -13,6 +13,7 @@ export interface SearchQuery {
   max_results?: number;
   top_k?: number;
   databases?: string[];
+  access_filter?: 'open' | 'restricted';
 }
 
 export interface SearchResponse {
