@@ -10,7 +10,14 @@ export class ApiService {
     onData: (data: StreamingResponse) => void,
     onError: (error: string) => void,
     onComplete: () => void,
-    options?: { access_filter?: 'open' | 'restricted'; databases?: string[]; max_results?: number; top_k?: number }
+    options?: { 
+      access_filter?: '' | 'open' | 'restricted'; 
+      databases?: string[]; 
+      max_results?: number; 
+      top_k?: number;
+      year_min?: number;
+      year_max?: number;
+    }
   ): Promise<void> {
     try {
       // Use the chat completions endpoint like the frontend
@@ -22,7 +29,9 @@ export class ApiService {
         max_results: options?.max_results ?? 10,
         top_k: options?.top_k ?? 10,
         databases: options?.databases,
-        access_filter: options?.access_filter,
+        access_filter: options?.access_filter || undefined,
+        year_min: options?.year_min,
+        year_max: options?.year_max,
       };
 
       const response = await fetch(API_BASE_URL, {
@@ -76,11 +85,13 @@ export class ApiService {
     onChunk: (textChunk: string) => void,
     onEvent?: (eventText: string) => void,
     options?: {
-      access_filter?: 'open' | 'restricted';
+      access_filter?: '' | 'open' | 'restricted';
       citation_style?: 'APA' | 'MLA';
       max_results?: number;
       top_k?: number;
       databases?: string[];
+      year_min?: number;
+      year_max?: number;
     }
   ): Promise<void> {
     const payload = {
@@ -91,8 +102,10 @@ export class ApiService {
       max_results: options?.max_results,
       top_k: options?.top_k,
       databases: options?.databases,
-      access_filter: options?.access_filter,
+      access_filter: options?.access_filter || undefined,
       citation_style: options?.citation_style ?? 'APA',
+      year_min: options?.year_min,
+      year_max: options?.year_max,
     };
 
     const res = await fetch(API_BASE_URL, {

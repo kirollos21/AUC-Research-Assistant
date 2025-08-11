@@ -24,6 +24,7 @@ import { ApiService } from '../services/api';
 import { Document, CitationStyle, StreamingResponse, ChatMessage } from '../types/search';
 import { useAppTheme } from '../utils/themeContext';
 import CitationPreview from '../components/CitationPreview';
+import ConversationalChat from '../components/ConversationalChat';
 
 const MAX_DOCS = 10;
 
@@ -35,11 +36,34 @@ export default function HomeScreen({ navigation }: any) {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [citationStyle, setCitationStyle] = useState<CitationStyle>('APA');
-  const [activeTab, setActiveTab] = useState<'response' | 'documents'>('response');
+  const [activeTab, setActiveTab] = useState<'response' | 'documents' | 'conversation'>('response');
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([
     { role: 'system', content: 'You are an academic assistant' },
   ]);
-  const [accessFilter, setAccessFilter] = useState<'open' | 'restricted' | 'all'>('all');
+  const [accessFilter, setAccessFilter] = useState<'' | 'open' | 'restricted'>('');
+  const [yearMin, setYearMin] = useState<string>('');
+  const [yearMax, setYearMax] = useState<string>('');
+
+  // Year filter functionality - allows users to filter search results by publication year range
+  // Similar to the frontend implementation, supports year_min and year_max parameters
+  // Helper function to validate year input
+  const validateYear = (year: string): string => {
+    if (!year) return '';
+    const numYear = parseInt(year);
+    if (isNaN(numYear)) return '';
+    if (numYear < 1800 || numYear > 2100) return '';
+    return year;
+  };
+
+  const handleYearMinChange = (text: string) => {
+    const validated = validateYear(text);
+    setYearMin(validated);
+  };
+
+  const handleYearMaxChange = (text: string) => {
+    const validated = validateYear(text);
+    setYearMax(validated);
+  };
 
   const colorScheme = useColorScheme();
   const { isDarkMode, themeMode, setThemeMode } = useAppTheme();
@@ -92,7 +116,9 @@ export default function HomeScreen({ navigation }: any) {
           setIsLoading(false);
         },
         {
-          access_filter: accessFilter === 'all' ? undefined : accessFilter,
+          access_filter: accessFilter || undefined,
+          year_min: yearMin ? parseInt(yearMin) : undefined,
+          year_max: yearMax ? parseInt(yearMax) : undefined,
         }
       );
     } catch (err) {
@@ -110,6 +136,11 @@ export default function HomeScreen({ navigation }: any) {
     setError('');
     setResponse('');
     setDocuments([]);
+
+    // Add the user's initial query to chat messages if it's not already there
+    if (!chatMessages.some(msg => msg.role === 'user' && msg.content === trimmed)) {
+      setChatMessages(prev => [...prev, { role: 'user', content: trimmed }]);
+    }
 
     const nextMessages = [...chatMessages, { role: 'user' as const, content: trimmed }];
     setChatMessages(nextMessages);
@@ -147,7 +178,9 @@ export default function HomeScreen({ navigation }: any) {
           }
         },
         {
-          access_filter: accessFilter === 'all' ? undefined : accessFilter,
+          access_filter: accessFilter || undefined,
+          year_min: yearMin ? parseInt(yearMin) : undefined,
+          year_max: yearMax ? parseInt(yearMax) : undefined,
         }
       );
 
@@ -158,6 +191,65 @@ export default function HomeScreen({ navigation }: any) {
       setIsLoading(false);
       setStatus('');
     }
+  };
+
+  const handleFollowUpQuestion = async (message: string) => {
+    setIsLoading(true);
+    setError('');
+
+    const nextMessages = [...chatMessages, { role: 'user' as const, content: message }];
+    setChatMessages(nextMessages);
+    
+    // Ensure we're on the conversation tab
+    setActiveTab('conversation');
+
+    let accumulated = '';
+    try {
+      await ApiService.chatCompletionsStream(
+        nextMessages,
+        (chunk) => {
+          accumulated += chunk;
+        },
+        (eventText) => {
+          // handle events: status and documents
+          if (!eventText) return;
+          const trimmedEvent = eventText.trim();
+          if (trimmedEvent.startsWith('documents:')) {
+            try {
+              const json = trimmedEvent.replace(/^documents:\s*/i, '');
+              const docs: any[] = JSON.parse(json);
+              const mapped: Document[] = docs.map((d) => ({
+                title: d.title ?? 'Unknown Title',
+                authors: d.authors ?? 'Unknown Authors',
+                year: d.year ?? 'Unknown',
+                source: d.source ?? 'Unknown',
+                url: d.url ?? '',
+                abstract: d.abstract ?? '',
+                score: Number(d.score ?? 0),
+              }));
+              setDocuments(mapped);
+            } catch (_) {}
+          }
+        },
+        {
+          access_filter: accessFilter || undefined,
+          year_min: yearMin ? parseInt(yearMin) : undefined,
+          year_max: yearMax ? parseInt(yearMax) : undefined,
+        }
+      );
+
+      setChatMessages((prev) => [...prev, { role: 'assistant', content: accumulated }]);
+    } catch (e) {
+      setError('An error occurred with the connection.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClearConversation = () => {
+    setChatMessages([{ role: 'system', content: 'You are an academic assistant' }]);
+    setResponse('');
+    setDocuments([]);
   };
 
   const handleOpenUrl = (url: string) => {
@@ -224,10 +316,10 @@ export default function HomeScreen({ navigation }: any) {
           {/* Filters */}
           <View style={{ marginTop: 12 }}>
             <Text style={{ marginBottom: 8, color: themeStyles.secondaryTextColor }}>Access filter</Text>
-            <View style={{ flexDirection: 'row', gap: 8 }}>
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
               <Chip
-                selected={accessFilter === 'all'}
-                onPress={() => setAccessFilter('all')}
+                selected={accessFilter === ''}
+                onPress={() => setAccessFilter('')}
               >
                 All
               </Chip>
@@ -243,6 +335,62 @@ export default function HomeScreen({ navigation }: any) {
               >
                 Restricted
               </Chip>
+              <Button
+                mode="outlined"
+                onPress={() => setAccessFilter('')}
+                compact
+                style={{ minWidth: 60 }}
+              >
+                Reset
+              </Button>
+            </View>
+          </View>
+
+          {/* Year Filter */}
+          <View style={{ marginTop: 12 }}>
+            <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <Text style={{ color: themeStyles.secondaryTextColor }}>Year range</Text>
+              {(yearMin || yearMax) && (
+                <Chip
+                  mode="outlined"
+                  textStyle={{ fontSize: 12 }}
+                  style={{ backgroundColor: '#dbeafe' }}
+                >
+                  {yearMin && yearMax ? `${yearMin}-${yearMax}` : yearMin ? `From ${yearMin}` : `To ${yearMax}`}
+                </Chip>
+              )}
+            </View>
+            <View style={{ flexDirection: 'row', gap: 8, alignItems: 'center' }}>
+              <TextInput
+                mode="outlined"
+                value={yearMin}
+                onChangeText={handleYearMinChange}
+                placeholder="Min year"
+                keyboardType="numeric"
+                style={{ flex: 1, minWidth: 100 }}
+                dense
+              />
+              <Text style={{ color: themeStyles.secondaryTextColor }}>to</Text>
+              <TextInput
+                mode="outlined"
+                value={yearMax}
+                onChangeText={handleYearMaxChange}
+                placeholder="Max year"
+                keyboardType="numeric"
+                style={{ flex: 1, minWidth: 100 }}
+                dense
+              />
+              <Button
+                mode="outlined"
+                onPress={() => {
+                  setYearMin('');
+                  setYearMax('');
+                }}
+                compact
+                style={{ minWidth: 60 }}
+              >
+                Clear
+              </Button>
             </View>
           </View>
 
@@ -295,6 +443,13 @@ export default function HomeScreen({ navigation }: any) {
             >
               📄 Documents ({Math.min(documents.length, MAX_DOCS)})
             </Button>
+            <Button
+              mode={activeTab === 'conversation' ? 'contained' : 'outlined'}
+              onPress={() => setActiveTab('conversation')}
+              style={styles.tabButton}
+            >
+              💬 Conversation {chatMessages.filter(msg => msg.role !== 'system').length > 0 && `(${chatMessages.filter(msg => msg.role !== 'system').length})`}
+            </Button>
           </View>
 
           {/* Citation Style Selector */}
@@ -324,9 +479,20 @@ export default function HomeScreen({ navigation }: any) {
           {activeTab === 'response' && (
             <Card style={[styles.responseCard, { backgroundColor: themeStyles.cardBackground }]}>
               <Card.Content>
-                <Title style={[styles.responseTitle, { color: themeStyles.textColor }]}>
-                  🤖 AI Analysis
-                </Title>
+                <View style={styles.responseHeader}>
+                  <Title style={[styles.responseTitle, { color: themeStyles.textColor }]}>
+                    🤖 AI Analysis
+                  </Title>
+                  {chatMessages.filter(msg => msg.role !== 'system').length > 2 && (
+                    <Chip
+                      mode="outlined"
+                      textStyle={{ fontSize: 12 }}
+                      style={{ backgroundColor: '#dbeafe' }}
+                    >
+                      {chatMessages.filter(msg => msg.role !== 'system').length} messages
+                    </Chip>
+                  )}
+                </View>
                 {response ? (
                   <View style={styles.markdownContainer}>
                     <Markdown
@@ -354,12 +520,42 @@ export default function HomeScreen({ navigation }: any) {
                     </Text>
                   </View>
                 )}
+                
+                {response && !isLoading && (
+                  <View style={styles.responseActions}>
+                    <Button
+                      mode="outlined"
+                      onPress={() => setActiveTab('conversation')}
+                      icon="chat"
+                      style={{ marginTop: 16 }}
+                    >
+                      Continue Conversation
+                    </Button>
+                  </View>
+                )}
               </Card.Content>
             </Card>
           )}
 
           {activeTab === 'documents' && (
             <View style={styles.documentsContainer}>
+              {chatMessages.filter(msg => msg.role !== 'system').length > 2 && (
+                <Card style={[styles.conversationContextCard, { backgroundColor: themeStyles.cardBackground }]}>
+                  <Card.Content>
+                    <Text style={[styles.conversationContextText, { color: themeStyles.secondaryTextColor }]}>
+                      💬 This search is part of an ongoing conversation with {chatMessages.filter(msg => msg.role !== 'system').length} messages
+                    </Text>
+                    <Button
+                      mode="outlined"
+                      onPress={() => setActiveTab('conversation')}
+                      compact
+                      style={{ marginTop: 8 }}
+                    >
+                      View Conversation
+                    </Button>
+                  </Card.Content>
+                </Card>
+              )}
               {documents.length > 0 ? (
                 documents.slice(0, MAX_DOCS).map((doc, index) => (
                   <Card
@@ -428,6 +624,39 @@ export default function HomeScreen({ navigation }: any) {
               )}
             </View>
           )}
+
+          {activeTab === 'conversation' && (
+            <View style={styles.conversationContainer}>
+              <ConversationalChat
+                messages={chatMessages.filter(msg => msg.role !== 'system')}
+                onSendMessage={handleFollowUpQuestion}
+                onClearConversation={handleClearConversation}
+                isLoading={isLoading}
+                isDarkMode={isDarkMode}
+                suggestedQuestions={
+                  response && documents.length > 0 
+                    ? [
+                        "Can you explain this in simpler terms?",
+                        "What are the key findings?",
+                        "How recent is this research?",
+                        "Are there any limitations?",
+                        "What are the practical applications?",
+                        "Can you find more recent papers on this topic?",
+                        "What are the main methodologies used?",
+                        "Are there conflicting studies?"
+                      ]
+                    : [
+                        "What are the latest developments in machine learning?",
+                        "Find papers on climate change adaptation",
+                        "Show me research about renewable energy",
+                        "What studies exist on quantum computing?",
+                        "Find recent papers on healthcare AI",
+                        "What research is there on blockchain technology?"
+                      ]
+                }
+              />
+            </View>
+          )}
         </View>
       )}
     </ScrollView>
@@ -491,10 +720,11 @@ const styles = StyleSheet.create({
   },
   tabContainer: {
     flexDirection: 'row',
-    gap: 8,
+    gap: 4,
   },
   tabButton: {
     flex: 1,
+    minWidth: 100,
   },
   citationContainer: {
     flexDirection: 'row',
@@ -572,5 +802,26 @@ const styles = StyleSheet.create({
   },
   noDocumentsCard: {
     elevation: 4,
+  },
+  conversationContainer: {
+    flex: 1,
+    height: 500,
+  },
+  responseActions: {
+    marginTop: 16,
+  },
+  responseHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  conversationContextCard: {
+    marginBottom: 16,
+    elevation: 2,
+  },
+  conversationContextText: {
+    fontSize: 14,
+    fontStyle: 'italic',
   },
 }); 

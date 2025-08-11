@@ -13,7 +13,9 @@ export interface SearchQuery {
   max_results?: number;
   top_k?: number;
   databases?: string[];
-  access_filter?: 'open' | 'restricted';
+  access_filter?: '' | 'open' | 'restricted';
+  year_min?: number;
+  year_max?: number;
 }
 
 export interface SearchResponse {
