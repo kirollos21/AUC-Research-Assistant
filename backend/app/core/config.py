@@ -9,7 +9,7 @@ from dotenv import load_dotenv
 from pydantic import PositiveFloat, PositiveInt
 from pydantic_settings import BaseSettings
 
-SearchEngineName: TypeAlias = Literal["arxiv", "semantic_scholar"]
+SearchEngineName: TypeAlias = Literal["arxiv", "semantic_scholar", "searxng"]
 
 _ = load_dotenv()
 
@@ -67,6 +67,7 @@ class Settings(BaseSettings):
     # TODO: switch type to positivefloat project-wide
     ARXIV_RATE_LIMIT_REQUESTS_PER_MINUTE: float = 10.0
     SEMANTIC_SCHOLAR_RATE_LIMIT_REQUESTS_PER_MINUTE: float = 30.0
+    SEARXNG_RATE_LIMIT_REQUESTS_PER_MINUTE: float = 0.0
     # In seconds. Note that this is in addition to the rate limiting
     SEARCH_TIMEOUT: PositiveFloat = 30.0
 
@@ -112,6 +113,12 @@ class Settings(BaseSettings):
     # Mistral embedding uses the hf_token to download the tokenizer. Without it it uses a len()
     # based tokenizer that is not optimized. More can be found here https://github.com/langchain-ai/langchain/issues/20618
     HF_TOKEN: Optional[str] = None
+
+    # If set to true, in completions API endpoint, will stream events even when the client request does not include the `stream_events` field in the request
+    STREAM_EVENTS_BY_DEFAULT: bool = False
+
+    # The base URL that will be used for the SearxNG search engine. If set to None, the class initialization will fail
+    SEARXNG_BASE_URL: str | None = None
 
     class Config:
         env_file = ".env"

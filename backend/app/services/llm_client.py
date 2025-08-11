@@ -15,6 +15,7 @@ from langchain_openai.chat_models import ChatOpenAI
 from langchain_ollama.chat_models import ChatOllama
 from pydantic import BaseModel, Field
 from app.core.config import settings
+from app.schemas.search import CitationStyle, SentDocument
 
 
 # TODO: move to more relevant schema file
@@ -314,10 +315,12 @@ Please provide a comprehensive answer to the user's question based on the academ
         return self.llm.astream(messages)
 
     # TODO: maybe pass the entire document along if possible and not just the title, authors, and abstract?
+    # TODO: test different citation styles
     async def generate_rag_response_from_conversation(
         self,
-        conversation_history: List[ChatMessage],
-        context_documents: List[Dict[str, Any]],
+        conversation_history: list[ChatMessage],
+        context_documents: list[SentDocument],
+        citation_style: CitationStyle = "IEEE",
     ) -> AsyncIterator[BaseMessageChunk]:
         """
         Generate response using retrieved documents as context and the entire conversation history.
@@ -333,15 +336,12 @@ Please provide a comprehensive answer to the user's question based on the academ
         # Format context documents
         context_text: str = ""
         for i, doc in enumerate(context_documents, 1):
-            title: str = doc.get("title", "Unknown Title")
-            abstract: str = doc.get("abstract", "No abstract available")
-            authors: List[str] = doc.get("authors", [])
-            authors_str: str = ", ".join(authors) if authors else "Unknown Authors"
-
             context_text += f"\n--- Document {i} ---\n"
-            context_text += f"Title: {title}\n"
-            context_text += f"Authors: {authors_str}\n"
-            context_text += f"Abstract: {abstract}\n\n"
+            context_text += f"Title: {doc.title}\n"
+            context_text += f"Authors: {doc.authors}\n"
+            context_text += f"Year published: {doc.year}\n"
+            context_text += f"Month published: {doc.month}\n"
+            context_text += f"Abstract: {doc.abstract}\n\n"
 
         # Create system message with context and instructions
         system_prompt = f"""You are an expert academic research assistant. Your task is to answer the user's research question based on the provided academic documents and conversation context.
@@ -350,12 +350,12 @@ Guidelines:
 - Use only the information from the provided documents
 - Consider the conversation history to understand context and any clarifications
 - Focus your answer on the user's LATEST question while being informed by the conversation context
-- Cite specific papers when making claims (use document index for citation with IEEE style, like [1] or [2-5])
+- Cite specific papers when making claims (use the {citation_style} citation style)
 - If the documents don't contain enough information to answer the question, say so
 - Provide a comprehensive answer that synthesizes information from multiple sources
 - Maintain academic tone and accuracy
 - If you find conflicting information, acknowledge it and explain the different perspectives
-- Do not create a bibliography at the end of your response. Simply cite the sources provided to you. The bibliography will be automatically generated and provided to the user.
+- Do not create a bibliography at the end of your response. Simply cite the sources provided to you. The bibliography will be automatically generated and provided to the user. I repeat, DO NOT WRITE ANYTHING AKIN TO A BIBLIOGRAPHY OR LIST OF REFERENCES AT THE END OF YOUR RESPONSE. SIMPLY CITE THE DOCUMENTS PROVIDED TO YOU INILNE ONLY.
 
 Relevant academic documents:
 {context_text}"""

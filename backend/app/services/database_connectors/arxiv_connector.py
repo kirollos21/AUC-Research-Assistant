@@ -4,25 +4,30 @@ arXiv database connector for federated search
 
 import asyncio
 import logging
-from typing import List, Dict, Any, Optional
-from datetime import datetime
+from typing import Dict, List, final, override
+
 import arxiv
-import httpx
 
+from app.core.config import SearchEngineName
+from app.schemas.search import AccessInfo, Author, SearchQuery, SearchResult
 from app.services.database_connectors.base import DatabaseConnector
-from app.schemas.search import SearchResult, SearchQuery, Author, AccessInfo
-
 
 logger = logging.getLogger(__name__)
 
 
+@final
 class ArxivConnector(DatabaseConnector):
     """Connector for arXiv preprint repository"""
 
     def __init__(self):
-        super().__init__("arxiv", "https://arxiv.org")
+        super().__init__()
         self.client = arxiv.Client(page_size=100, delay_seconds=3, num_retries=3)
 
+    @override
+    def get_name(self) -> SearchEngineName:
+        return "arxiv"
+
+    @override
     async def search(self, query: SearchQuery) -> List[SearchResult]:
         """Search arXiv database"""
         try:
@@ -86,7 +91,7 @@ class ArxivConnector(DatabaseConnector):
             yield result
 
     # TODO: improve typing
-    def _normalize_result(self, raw_result) -> SearchResult:
+    def _normalize_result(self, raw_result: arxiv.Result) -> SearchResult:
         """Normalize arXiv result to SearchResult schema"""
         try:
             # Extract authors
@@ -159,6 +164,7 @@ class ArxivConnector(DatabaseConnector):
                 raw_metadata={},
             )
 
+    @override
     async def _perform_health_check(self):
         """Perform arXiv-specific health check"""
         # Try a simple search to test connectivity

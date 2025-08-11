@@ -97,8 +97,7 @@ async def detailed_health_check():
 
 # Include API routes
 app.include_router(api_router, prefix="/api/v1")
-app.include_router(chat_completions.router, prefix="/api/v1", tags=["chat"])
-
+app.include_router(chat_completions.router, prefix="/v1", tags=["chat"])
 
 
 @app.exception_handler(404)

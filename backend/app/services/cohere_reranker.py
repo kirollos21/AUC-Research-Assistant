@@ -39,6 +39,7 @@ class CohereReranker:
         """Check if the reranker is available"""
         return self.client is not None
 
+    # TODO: fix to comply with new `SentDocument` class in `app.schemas.search`
     async def rerank_documents(
         self, query: str, documents: List[Dict[str, Any]], top_n: Optional[int] = None
     ) -> List[Dict[str, Any]]:

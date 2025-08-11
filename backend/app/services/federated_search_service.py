@@ -3,26 +3,26 @@ Federated Search Service - Orchestrates searches across multiple academic databa
 """
 
 import asyncio
-import logging
-from typing import List, Dict, Any, Optional, final
-from datetime import datetime
 import hashlib
-from collections import defaultdict
+import logging
+from collections.abc import Coroutine
+from datetime import datetime
+from typing import Any, List, Optional, final
 
+from app.core.config import SearchEngineName, settings
+from app.schemas.search import (
+    DatabaseStatus,
+    FederatedSearchResponse,
+    SearchQuery,
+    SearchResult,
+    SearchStats,
+)
 from app.services.database_connectors.arxiv_connector import ArxivConnector
+from app.services.database_connectors.base import DatabaseConnector
+from app.services.database_connectors.searxng import SearxNGConnector
 from app.services.database_connectors.semantic_scholar_connector import (
     SemanticScholarConnector,
 )
-from app.schemas.search import (
-    SearchQuery,
-    SearchResult,
-    FederatedSearchResponse,
-    SearchStats,
-    DatabaseStatus,
-)
-from app.services.database_connectors.base import DatabaseConnector
-from app.core.config import SearchEngineName, settings
-
 
 logger = logging.getLogger(__name__)
 
@@ -32,14 +32,17 @@ class FederatedSearchService:
     """Service for coordinating federated search across academic databases"""
 
     def __init__(self):
-        self.connectors: Dict[SearchEngineName, DatabaseConnector] = {
-            "arxiv": ArxivConnector(),
-            "semantic_scholar": SemanticScholarConnector(),
-            # Add more connectors as they're implemented
-            # "pubmed": PubmedConnector(),
-            # "crossref": CrossrefConnector(),
-            # "doaj": DOAJConnector(),
-            # "google_scholar": GoogleScholar(),
+        db_name_to_constructor_map: dict[SearchEngineName, type[DatabaseConnector]] = {
+            "arxiv": ArxivConnector,
+            "semantic_scholar": SemanticScholarConnector,
+            "searxng": SearxNGConnector,
+            # "pubmed": PubmedConnector,
+            # "crossref": CrossrefConnector,
+            # "doaj": DOAJConnector,
+        }
+        self.connectors: dict[SearchEngineName, DatabaseConnector] = {
+            db_name: db_name_to_constructor_map[db_name]()
+            for db_name in settings.ENABLED_SEARCH_ENGINES
         }
         self.available_databases = list(self.connectors.keys())
         logger.info(
@@ -66,7 +69,9 @@ class FederatedSearchService:
             logger.info(f"Searching in databases {databases_to_search}")
 
             # Execute searches in parallel
-            search_tasks = []
+            search_tasks: list[
+                tuple[SearchEngineName, Coroutine[Any, Any, list[SearchResult]]]
+            ] = []
             for db_name in databases_to_search:
                 if db_name in self.connectors:
                     connector = self.connectors[db_name]
@@ -279,33 +284,9 @@ class FederatedSearchService:
             logger.exception(f"Failed to calculate recency score: {e}")
             return 0.5
 
-    def _calculate_citation_score(self, citation_info) -> float:
-        """Calculate citation score (0-1, higher = more cited)"""
-        if not citation_info or not citation_info.count:
-            return 0.5  # Neutral score for unknown citations
-
-        try:
-            # Simple logarithmic scaling for citation counts
-            # This is a placeholder - adjust based on field-specific norms
-            citation_count = citation_info.count
-            if citation_count >= 1000:
-                return 1.0
-            elif citation_count >= 100:
-                return 0.8
-            elif citation_count >= 10:
-                return 0.6
-            elif citation_count >= 1:
-                return 0.4
-            else:
-                return 0.2
-
-        except Exception as e:
-            logger.exception(f"Failed to calculate citation score: {e}")
-            return 0.5
-
     async def get_database_status(self) -> List[DatabaseStatus]:
         """Get status of all database connectors"""
-        status_list = []
+        status_list: list[DatabaseStatus] = []
 
         for name, connector in self.connectors.items():
             try:
