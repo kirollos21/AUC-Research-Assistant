@@ -37,13 +37,13 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-[calc(100vh-80px)] bg-gray-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 pt-6">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Link href="/" className="inline-block">
-            <img 
-              src="/auc_logo2.png" 
-              alt="AUC Research Assistant Logo" 
+            <img
+              src="/auc_logo2.png"
+              alt="AUC Research Assistant Logo"
               className="h-22 w-auto mx-auto mb-8"
             />
           </Link>

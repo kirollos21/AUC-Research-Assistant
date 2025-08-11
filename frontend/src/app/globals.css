@@ -182,3 +182,16 @@ body {
 .animate-pulse {
   animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
 }
+
+/* sleek sidebar scrollbar */
+.slim-scrollbar::-webkit-scrollbar { width: 8px; }
+.slim-scrollbar::-webkit-scrollbar-thumb {
+  background-color: rgba(71, 85, 105, 0.4); /* slate-600/40 */
+  border-radius: 9999px;
+}
+.slim-scrollbar:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(71, 85, 105, 0.7);
+}
+/* Prevent accidental horizontal scrolling app-wide */
+html, body { overflow-x: hidden; }
+html, body, #__next { height: 100%; }

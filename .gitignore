@@ -212,6 +212,7 @@ local_settings.py
 .local/
 
 backend/.envrc
+frontend/.envrc
 rsync-excludes
 backend/CLAUDE.md
 pyrightconfig.json

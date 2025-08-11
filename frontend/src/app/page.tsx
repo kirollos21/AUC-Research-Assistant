@@ -1,12 +1,9 @@
-"use client";
-
-import Header from "@/components/Header";
-import Search from "@/components/Search";
+'use client';
+import Search from '@/components/Search';
 
 export default function Home() {
   return (
-    <main>
-      <Header />
+    <main className="min-h-[calc(100vh-64px)] overflow-y-auto">
       <Search />
     </main>
   );

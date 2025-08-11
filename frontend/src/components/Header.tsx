@@ -1,13 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from 'react';
-import Link from 'next/link';
-import { getAuthState, logoutUser, AuthState } from '@/lib/auth';
-import { useRouter } from 'next/navigation';
+import React, { useEffect, useState } from "react";
+import Link from "next/link";
+import { getAuthState, logoutUser, AuthState } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 
 const Header: React.FC = () => {
   const router = useRouter();
-  const [authState, setAuthState] = useState<AuthState>({ isAuthenticated: false, user: null });
+  const [authState, setAuthState] = useState<AuthState>({
+    isAuthenticated: false,
+    user: null,
+  });
 
   useEffect(() => {
     const state = getAuthState();
@@ -17,21 +20,22 @@ const Header: React.FC = () => {
   const handleLogout = () => {
     logoutUser();
     setAuthState({ isAuthenticated: false, user: null });
-    router.push('/');
+    router.push("/");
   };
 
   return (
-    <header className="bg-black shadow-sm">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+   <header className="sticky top-0 z-50 bg-slate-900 overflow-hidden pointer-events-none">
+
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pointer-events-auto">
+        <div className="flex justify-between items-center h-20">
           {/* Logo */}
           <div className="flex items-center">
-            <Link href="/">
-              <img 
-                src="/auc_logo.png" 
-                alt="AUC Research Assistant Logo" 
-                className="h-18 w-auto"
-              />
+            <Link href="/" className="block">
+              <img
+              src="/auc_logo.png?v=4"                    // add ?v=4 to bust cache
+              alt="AUC Libraries and Learning Technologies"
+              className="block h-14 md:h-16 w-auto object-contain invert brightness-0"
+            />
             </Link>
           </div>
 
@@ -39,27 +43,29 @@ const Header: React.FC = () => {
           <div className="flex items-center space-x-4">
             {authState.isAuthenticated && authState.user ? (
               <>
-                <span className="text-white font-medium">
+                <span className="text-slate-200 font-medium">
                   Welcome back, {authState.user.firstName}!
                 </span>
-                <button 
+                <button
                   onClick={handleLogout}
-                  className="bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium"
+                  className="bg-slate-800 hover:bg-slate-700 text-slate-100 px-4 py-2 rounded-lg transition-colors font-medium"
                 >
                   Log Out
                 </button>
               </>
             ) : (
               <>
-                <Link href="/login">
-                  <button className="text-white hover:text-gray-300 transition-colors font-medium">
-                    Log In
-                  </button>
+                <Link
+                  href="/login"
+                  className="text-slate-200 hover:text-white transition-colors font-medium"
+                >
+                  Log In
                 </Link>
-                <Link href="/signup">
-                  <button className="bg-white text-black px-4 py-2 rounded-lg hover:bg-gray-200 transition-colors font-medium">
-                    Sign Up
-                  </button>
+                <Link
+                  href="/signup"
+                  className="inline-flex items-center rounded-lg px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white transition-colors font-medium"
+                >
+                  Sign Up
                 </Link>
               </>
             )}
@@ -70,4 +76,4 @@ const Header: React.FC = () => {
   );
 };
 
-export default Header; 
+export default Header;
