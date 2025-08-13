@@ -175,6 +175,16 @@ cd AUC-Research-Assistant
 ```
 
 #### 2. Backend Setup
+##### Recommended Approach (with uv):
+```bash
+cd backend
+# Sync uv environment
+uv sync
+# Run app with uv
+uv run main.py
+```
+
+##### Alternative Approach (manual venv with pip):
 ```bash
 # Navigate to backend directory
 cd backend
