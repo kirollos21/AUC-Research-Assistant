@@ -17,7 +17,7 @@ class _SearxNGResult(BaseModel):
     url: str
     title: str
     published_date: str | None = Field(default=None, validation_alias="publishedDate")
-    content: str = "Unknown abstract"
+    content: str | None = None
     doi: str | None = None
     authors: list[str] | None = None
     journal: str | None = None
@@ -65,6 +65,24 @@ class SearxNGConnector(DatabaseConnector):
 
         logger.debug(f"Found {len(response.results)} documents")
         for result in response.results:
+            if settings.SEARXNG_EXCLUDE_AUTHORLESS_RESULTS and (
+                not result.authors or len(result.authors) == 0
+            ):
+                continue
+            if settings.SEARXNG_EXCLUDE_ABSTRACTLESS_RESULTS and (
+                not result.content or result.content == ""
+            ):
+                continue
+            if settings.SEARXNG_EXCLUDE_PUBLISHERLESS_RESULTS and not result.publisher:
+                continue
+
+            access_type: Literal["open_access", "licensed", "restricted", "unknown"]
+            match settings.SEARXNG_REPORT_ACCESS_TYPE:
+                case "open":
+                    access_type = "open_access"
+                case "restricted":
+                    access_type = "restricted"
+
             results.append(
                 SearchResult(
                     id=result.title,
@@ -75,7 +93,11 @@ class SearxNGConnector(DatabaseConnector):
                     ],
                     abstract=result.content,
                     source_database=result.publisher or "SearxNG",
-                    access_info=AccessInfo(is_open_access=False, access_type="unknown"),
+                    access_info=AccessInfo(
+                        is_open_access=settings.SEARXNG_REPORT_ACCESS_TYPE == "open",
+                        access_type=access_type,
+                    ),
+                    access=settings.SEARXNG_REPORT_ACCESS_TYPE,
                     publication_date=datetime.fromisoformat(result.published_date)
                     if result.published_date
                     else None,

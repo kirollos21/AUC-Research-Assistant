@@ -120,6 +120,10 @@ class Settings(BaseSettings):
 
     # The base URL that will be used for the SearxNG search engine. If set to None, the class initialization will fail
     SEARXNG_BASE_URL: str | None = None
+    SEARXNG_REPORT_ACCESS_TYPE: AccessType = "restricted"
+    SEARXNG_EXCLUDE_AUTHORLESS_RESULTS: bool = True
+    SEARXNG_EXCLUDE_ABSTRACTLESS_RESULTS: bool = True
+    SEARXNG_EXCLUDE_PUBLISHERLESS_RESULTS: bool = False
 
     class Config:
         env_file = ".env"
