@@ -116,7 +116,7 @@ class SearxNGConnector(DatabaseConnector):
     async def _search(self, query: SearchQuery) -> _SearxNGAPIReturn:
         async with httpx.AsyncClient() as client:
             response = await client.get(
-                f"{self.base_url}/search?q={query.query.replace(' ', '+')}&category=science&pageno=1&language=all&time_range=&safesearch=0&format=json"
+                f"{self.base_url}/search?q={query.query.replace(' ', '+')}&category_science=1&pageno=1&language=all&time_range=&safesearch=0&format=json"
             )
             _ = response.raise_for_status()
             return _SearxNGAPIReturn.model_validate_json(response.text)
