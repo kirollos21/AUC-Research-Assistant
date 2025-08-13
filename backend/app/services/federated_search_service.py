@@ -9,7 +9,8 @@ from collections.abc import Coroutine
 from datetime import datetime
 from typing import Any, List, Optional, final
 
-from app.core.config import SearchEngineName, settings
+from app.core.config import settings
+from app.schemas import SearchEngineName
 from app.schemas.search import (
     DatabaseStatus,
     FederatedSearchResponse,

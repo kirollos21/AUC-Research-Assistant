@@ -26,7 +26,8 @@ from fastapi.responses import StreamingResponse
 from langchain_core.messages.base import BaseMessageChunk
 from pydantic import BaseModel, Field, PositiveInt
 
-from app.core.config import SearchEngineName, settings
+from app.core.config import settings
+from app.schemas import SearchEngineName
 from app.schemas.search import (
     AccessType,
     CitationStyle,

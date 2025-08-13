@@ -2,11 +2,12 @@
 Pydantic schemas for search functionality
 """
 
-from pydantic import model_validator
-from typing import List, Optional, Dict, Any, Literal, TypeAlias, final
-from pydantic import BaseModel, Field
 from datetime import datetime
-from app.core.config import SearchEngineName, settings
+from typing import Any, Dict, List, Literal, Optional, TypeAlias, final
+
+from pydantic import BaseModel, Field, model_validator
+
+from app.schemas import SearchEngineName
 
 
 class SearchQuery(BaseModel):
@@ -14,7 +15,7 @@ class SearchQuery(BaseModel):
 
     query: str = Field(..., description="Main search query")
     databases: Optional[List[SearchEngineName]] = Field(
-        default=settings.ENABLED_SEARCH_ENGINES,
+        default=None,
         description="List of databases to search",
     )
     max_results: int = Field(

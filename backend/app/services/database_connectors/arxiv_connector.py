@@ -8,7 +8,7 @@ from typing import Dict, List, final, override
 
 import arxiv
 
-from app.core.config import SearchEngineName
+from app.schemas import SearchEngineName
 from app.schemas.search import AccessInfo, Author, SearchQuery, SearchResult
 from app.services.database_connectors.base import DatabaseConnector
 

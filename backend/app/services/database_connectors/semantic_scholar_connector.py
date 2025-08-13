@@ -8,7 +8,8 @@ from typing import Any, Dict, List, Optional, final, override
 
 import httpx
 
-from app.core.config import SearchEngineName, settings
+from app.core.config import settings
+from app.schemas import SearchEngineName
 from app.schemas.search import AccessInfo, Author, Citation, SearchQuery, SearchResult
 from app.services.database_connectors.base import DatabaseConnector
 

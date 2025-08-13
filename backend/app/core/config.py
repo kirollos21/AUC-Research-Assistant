@@ -3,13 +3,14 @@ Application configuration management
 """
 
 from functools import lru_cache
-from typing import List, Literal, Optional, TypeAlias
+from typing import List, Literal, Optional
 
 from dotenv import load_dotenv
 from pydantic import PositiveFloat, PositiveInt
 from pydantic_settings import BaseSettings
 
-SearchEngineName: TypeAlias = Literal["arxiv", "semantic_scholar", "searxng"]
+from app.schemas import SearchEngineName
+from app.schemas.search import AccessType
 
 _ = load_dotenv()
 

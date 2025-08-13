@@ -8,7 +8,7 @@ from abc import ABC, abstractmethod
 from datetime import datetime
 from typing import Any, Dict, List, Optional
 
-from app.core.config import SearchEngineName
+from app.schemas import SearchEngineName
 from app.schemas.search import SearchQuery, SearchResult
 
 logger = logging.getLogger(__name__)
