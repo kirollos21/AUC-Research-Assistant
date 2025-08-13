@@ -3,7 +3,7 @@ Application configuration management
 """
 
 from functools import lru_cache
-from typing import List, Literal, Optional
+from typing import List, Literal, Optional, final
 
 from dotenv import load_dotenv
 from pydantic import PositiveFloat, PositiveInt
@@ -124,7 +124,10 @@ class Settings(BaseSettings):
     SEARXNG_EXCLUDE_AUTHORLESS_RESULTS: bool = True
     SEARXNG_EXCLUDE_ABSTRACTLESS_RESULTS: bool = True
     SEARXNG_EXCLUDE_PUBLISHERLESS_RESULTS: bool = False
+    SEARXNG_REPORT_ENGINE_AS_SOURCE_DATABASE: bool = True
+    """If true, the `source_database` attribute of `SearchResult` will be the `engine` attribute of the JSON returned by SearxNG (this could be for "google scholar" or "crossref" for example). Otherwise, the source will be reported to be "SearxNG"."""
 
+    @final
     class Config:
         env_file = ".env"
         case_sensitive = True

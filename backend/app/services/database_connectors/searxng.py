@@ -28,6 +28,7 @@ class _SearxNGResult(BaseModel):
     publisher: str | None = None
     volume: str | None = None
     isbn: list[str] | None = None
+    engine: str
 
 
 class _SearxNGAPIReturn(BaseModel):
@@ -83,6 +84,12 @@ class SearxNGConnector(DatabaseConnector):
                 case "restricted":
                     access_type = "restricted"
 
+            source_database: str
+            if settings.SEARXNG_REPORT_ENGINE_AS_SOURCE_DATABASE:
+                source_database = result.engine
+            else:
+                source_database = "searxng"
+
             results.append(
                 SearchResult(
                     id=result.title,
@@ -92,7 +99,7 @@ class SearxNGConnector(DatabaseConnector):
                         for author_name in (result.authors or [])
                     ],
                     abstract=result.content,
-                    source_database=result.publisher or "SearxNG",
+                    source_database=source_database,
                     access_info=AccessInfo(
                         is_open_access=settings.SEARXNG_REPORT_ACCESS_TYPE == "open",
                         access_type=access_type,
