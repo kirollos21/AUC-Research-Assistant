@@ -43,6 +43,7 @@ export default function ConversationalChat({
 }: ConversationalChatProps) {
   const [inputMessage, setInputMessage] = useState('');
   const [showAllMessages, setShowAllMessages] = useState(false);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
   const theme = useTheme();
 
@@ -66,9 +67,11 @@ export default function ConversationalChat({
 
   useEffect(() => {
     // Scroll to bottom when new messages arrive
-    setTimeout(() => {
-      scrollViewRef.current?.scrollToEnd({ animated: true });
-    }, 100);
+    if (messages.length > 0) {
+      setTimeout(() => {
+        scrollViewRef.current?.scrollToEnd({ animated: true });
+      }, 100);
+    }
   }, [messages]);
 
   const handleSend = () => {
@@ -81,6 +84,16 @@ export default function ConversationalChat({
 
   const handleSuggestedQuestion = (question: string) => {
     onSendMessage(question);
+  };
+
+  const handleScroll = (event: any) => {
+    const { contentOffset, contentSize, layoutMeasurement } = event.nativeEvent;
+    const isCloseToBottom = contentOffset.y + layoutMeasurement.height >= contentSize.height - 20;
+    setShowScrollButton(!isCloseToBottom);
+  };
+
+  const scrollToBottom = () => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
   };
 
   const renderMessage = (message: ChatMessage, index: number) => {
@@ -123,12 +136,17 @@ export default function ConversationalChat({
       style={[styles.container, { backgroundColor: themeStyles.backgroundColor }]}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
       keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}
+      enabled={true}
     >
       <ScrollView
         ref={scrollViewRef}
         style={styles.messagesContainer}
         contentContainerStyle={styles.messagesContent}
-        showsVerticalScrollIndicator={false}
+        showsVerticalScrollIndicator={true}
+        bounces={true}
+        alwaysBounceVertical={false}
+        keyboardShouldPersistTaps="handled"
+        onScroll={handleScroll}
       >
         {messages.length > 0 && onClearConversation && (
           <View style={styles.conversationHeader}>
@@ -222,6 +240,18 @@ export default function ConversationalChat({
         )}
       </ScrollView>
 
+      {showScrollButton && messages.length > 3 && (
+        <Button
+          mode="contained"
+          onPress={scrollToBottom}
+          style={styles.scrollToBottomButton}
+          icon="arrow-down"
+          compact
+        >
+          Latest
+        </Button>
+      )}
+
       <Card style={[styles.inputContainer, { backgroundColor: themeStyles.cardBackground }]}>
         <Card.Content style={styles.inputContent}>
           <View style={styles.inputRow}>
@@ -264,7 +294,8 @@ const styles = StyleSheet.create({
   },
   messagesContent: {
     padding: 16,
-    paddingBottom: 8,
+    paddingBottom: 100, // Add extra padding at bottom for input area
+    flexGrow: 1,
   },
   emptyState: {
     alignItems: 'center',
@@ -386,5 +417,11 @@ const styles = StyleSheet.create({
   },
   showAllButton: {
     marginTop: 8,
+  },
+  scrollToBottomButton: {
+    position: 'absolute',
+    bottom: 16,
+    right: 16,
+    zIndex: 10,
   },
 }); 

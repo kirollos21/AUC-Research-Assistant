@@ -20,19 +20,19 @@ export class ApiService {
     }
   ): Promise<void> {
     try {
-      // Use the chat completions endpoint like the frontend
-      const payload = {
+      // Use the same payload structure as the frontend
+      const payload: any = {
         model: 'gpt-3.5-turbo',
         messages: [{ role: 'user' as const, content: query.trim() }],
         stream: true,
         stream_events: true,
         max_results: options?.max_results ?? 10,
         top_k: options?.top_k ?? 10,
-        databases: options?.databases,
-        access_filter: options?.access_filter || undefined,
-        year_min: options?.year_min,
-        year_max: options?.year_max,
       };
+
+      if (options?.access_filter) payload.access_filter = options.access_filter;
+      if (options?.year_min) payload.year_min = options.year_min;
+      if (options?.year_max) payload.year_max = options.year_max;
 
       const response = await fetch(API_BASE_URL, {
         method: 'POST',
@@ -94,19 +94,20 @@ export class ApiService {
       year_max?: number;
     }
   ): Promise<void> {
-    const payload = {
+    const payload: any = {
       model: 'gpt-3.5-turbo',
       messages,
       stream: true,
       stream_events: true,
       max_results: options?.max_results,
       top_k: options?.top_k,
-      databases: options?.databases,
       access_filter: options?.access_filter || undefined,
       citation_style: options?.citation_style ?? 'APA',
       year_min: options?.year_min,
       year_max: options?.year_max,
     };
+
+    console.log('Sending payload:', JSON.stringify(payload, null, 2));
 
     const res = await fetch(API_BASE_URL, {
       method: 'POST',
@@ -115,6 +116,7 @@ export class ApiService {
     });
 
     const text = await res.text();
+    console.log('Received response:', text.substring(0, 500) + '...');
     const lines = text.split('\n');
     for (const line of lines) {
       if (!line.startsWith('data: ')) continue;
@@ -123,15 +125,31 @@ export class ApiService {
       try {
         const chunk = JSON.parse(json);
         const delta = chunk?.choices?.[0]?.delta?.content as string | undefined;
+        console.log('Parsed chunk:', { delta, hasContent: !!delta });
         if (!delta) continue;
         if (delta.startsWith('<event>')) {
+          console.log('Found event:', delta);
           const eventText = delta.replace(/^<event>|<\/event>$/g, '');
-          onEvent?.(eventText);
+          const trimmed = eventText.trim();
+          console.log('Event content:', trimmed);
+          
+          if (trimmed.startsWith('documents:')) {
+            try {
+              const docsJson = trimmed.replace(/^documents:\s*/i, '');
+              const documents = JSON.parse(docsJson);
+              console.log('Parsed documents:', documents);
+              onEvent?.(`documents:${docsJson}`);
+            } catch (e) {
+              console.warn('Failed to parse documents payload:', trimmed, e);
+            }
+          } else {
+            onEvent?.(trimmed);
+          }
         } else {
           onChunk(delta);
         }
       } catch (e) {
-        // ignore malformed lines
+        console.error('Error parsing chunk:', e, json);
       }
     }
   }

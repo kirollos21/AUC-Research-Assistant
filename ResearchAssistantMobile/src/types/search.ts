@@ -1,11 +1,14 @@
 export interface Document {
+  content: string;
+  score: number;
   title: string;
   authors: string;
   year: string;
+  month: string;
   source: string;
   url: string;
   abstract: string;
-  score: number;
+  access: 'open' | 'restricted';
 }
 
 export interface SearchQuery {

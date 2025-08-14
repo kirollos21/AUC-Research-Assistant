@@ -157,22 +157,31 @@ export default function HomeScreen({ navigation }: any) {
         (eventText) => {
           // handle events: status and documents
           if (!eventText) return;
+          console.log('Received event:', eventText);
           const trimmedEvent = eventText.trim();
           if (trimmedEvent.startsWith('documents:')) {
             try {
               const json = trimmedEvent.replace(/^documents:\s*/i, '');
+              console.log('Parsing documents JSON:', json);
               const docs: any[] = JSON.parse(json);
+              console.log('Parsed documents:', docs);
               const mapped: Document[] = docs.map((d) => ({
+                content: d.content ?? '',
+                score: Number(d.score ?? 0),
                 title: d.title ?? 'Unknown Title',
                 authors: d.authors ?? 'Unknown Authors',
                 year: d.year ?? 'Unknown',
+                month: d.month ?? 'Unknown',
                 source: d.source ?? 'Unknown',
                 url: d.url ?? '',
                 abstract: d.abstract ?? '',
-                score: Number(d.score ?? 0),
+                access: d.access ?? 'restricted',
               }));
+              console.log('Mapped documents:', mapped);
               setDocuments(mapped);
-            } catch (_) {}
+            } catch (error) {
+              console.error('Error parsing documents:', error);
+            }
           } else {
             setStatus(trimmedEvent.replace(/<[^>]+>/g, ''));
           }
@@ -219,13 +228,16 @@ export default function HomeScreen({ navigation }: any) {
               const json = trimmedEvent.replace(/^documents:\s*/i, '');
               const docs: any[] = JSON.parse(json);
               const mapped: Document[] = docs.map((d) => ({
+                content: d.content ?? '',
+                score: Number(d.score ?? 0),
                 title: d.title ?? 'Unknown Title',
                 authors: d.authors ?? 'Unknown Authors',
                 year: d.year ?? 'Unknown',
+                month: d.month ?? 'Unknown',
                 source: d.source ?? 'Unknown',
                 url: d.url ?? '',
                 abstract: d.abstract ?? '',
-                score: Number(d.score ?? 0),
+                access: d.access ?? 'restricted',
               }));
               setDocuments(mapped);
             } catch (_) {}
@@ -805,7 +817,6 @@ const styles = StyleSheet.create({
   },
   conversationContainer: {
     flex: 1,
-    height: 500,
   },
   responseActions: {
     marginTop: 16,
