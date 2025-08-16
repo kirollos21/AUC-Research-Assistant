@@ -358,15 +358,20 @@ npm run build
 - **Key Concepts Extraction**: Identify main themes and research areas
 - **Trend Analysis**: Discover emerging patterns and research directions
 - **Gap Analysis**: Find opportunities for new research
-- **Citation Analysis**: Analyze impact metrics and citation patterns
-- **Interactive Dashboard**: Tabbed interface for different analysis types
+<!-- - **Citation Analysis**: Analyze impact metrics and citation patterns -->
+<!-- - **Interactive Dashboard**: Tabbed interface for different analysis types -->
 
 ### 🎨 **Modern UI/UX**
 - **Responsive Design**: Works perfectly on desktop, tablet, and mobile
 - **Dark/Light Mode**: Automatic theme detection and switching
-- **Real-time Updates**: Live database status and search results
+<!-- - **Real-time Updates**: Live database status and search results -->
 - **Accessibility**: WCAG compliant with keyboard navigation
-- **Loading States**: Beautiful animations and skeleton screens
+<!-- - **Loading States**: Beautiful animations and skeleton screens -->
+- **AUC Branding**: Professional header with AUC logo
+- **Form Validation**: Real-time input validation and error messages
+<!-- - **Loading States**: Professional loading animations -->
+- **Success Messages**: User-friendly feedback for actions
+- **Error Handling**: Clear error messages and recovery options
 
 ### 📱 **Mobile App Features**
 - **Cross-Platform**: iOS, Android, and Web support with React Native
@@ -378,15 +383,9 @@ npm run build
 - **Offline Capability**: Basic offline functionality for viewing cached results
 - **Touch-Optimized**: Mobile-first design with gesture support
 
-### 🛡️ **Database Monitoring**
-- **Health Checks**: Real-time monitoring of all database connectors
-- **Performance Metrics**: Response time tracking for each service
-- **Status Dashboard**: Visual indicators for system health
-- **Auto-refresh**: Automatic status updates every 5 minutes
-
 ### 🔐 **Authentication System**
 - **User Registration**: Complete signup flow with validation
-- **User Login**: Secure authentication with error handling
+<!-- - **User Login**: Secure authentication with error handling -->
 - **Session Management**: Persistent login state with localStorage
 - **Welcome Messages**: Personalized greeting with user's first name
 - **Logout Functionality**: Secure session termination
@@ -400,15 +399,6 @@ npm run build
 - **Data Persistence**: Local storage-based user database
 - **Real-time Updates**: Live user data synchronization
 
-### 🎨 **UI/UX Enhancements**
-- **AUC Branding**: Professional header with AUC logo
-- **Responsive Design**: Mobile-first approach with Tailwind CSS
-- **Form Validation**: Real-time input validation and error messages
-- **Loading States**: Professional loading animations
-- **Success Messages**: User-friendly feedback for actions
-- **Error Handling**: Clear error messages and recovery options
-- **Accessibility**: WCAG compliant with keyboard navigation
-
 ## 📚 **API Documentation**
 
 ### Core Endpoints
@@ -418,11 +408,7 @@ npm run build
 - `GET /docs` - Interactive API documentation (Swagger UI)
 
 ### Search Endpoints
-- `POST /api/v1/search/search` - Perform federated search
-- `GET /api/v1/search/databases/status` - Get database health status
-- `POST /api/v1/search/analyze` - Analyze search results
-- `POST /api/v1/search/query/expand` - Expand search queries
-- `GET /api/v1/search/suggestions` - Get search suggestions
+- `POST /v1/chat/completions` - OpenAI chat completions-compatible API endpoint for streaming LLM response
 
 ### Frontend Pages
 - `/` - Main application with search interface
@@ -432,75 +418,14 @@ npm run build
 
 ### Database Connectors
 - **ArXiv**: ✅ Fully functional with real-time search
-- **PubMed**: 🔄 In development
-- **CrossRef**: 🔄 In development
-- **DOAJ**: 🔄 In development
+- **SearxNG**: ✅ Fully functional with real-time search
+- **Semantic Scholar**: ✅ Fully functional with real-time search
+- **PubMed**: ✅ Through SearxNG
+- **Google Scholar**: ✅ Through SearxNG
+- **CrossRef**: ✅ Through SearxNG
 
-## 🚀 **Deployment Options**
-
-### 1. Vercel (Frontend) + Railway (Backend)
-```bash
-# Frontend deployment
-cd frontend
-vercel --prod
-
-# Backend deployment
-cd backend
-railway up
-```
-
-### 2. Docker Compose (Full Stack)
-```bash
-# Production deployment
-docker-compose -f docker/docker-compose.yml up -d
-```
-
-### 3. Kubernetes (Enterprise)
-```bash
-# Apply Kubernetes manifests
-kubectl apply -f k8s/
-```
-
-### 4. AWS/GCP/Azure
-- **Frontend**: Deploy to S3/Cloud Storage + CloudFront/CDN
-- **Backend**: Deploy to ECS/GKE/AKS
-- **Database**: Use managed PostgreSQL and Redis services
-
-## 📝 **Recent Updates (Latest Changes)**
-
-### 🔐 **Authentication System Implementation**
-- **Added complete user registration and login system**
-- **Implemented localStorage-based user data storage**
-- **Created professional login/signup pages with validation**
-- **Added welcome messages and logout functionality**
-- **Built admin panel for user management**
-
-### 🎨 **UI/UX Improvements**
-- **Added AUC branding with professional header design**
-- **Implemented responsive navigation with login/logout states**
-- **Created consistent button styling across all pages**
-- **Added form validation with real-time error messages**
-- **Implemented loading states and success feedback**
-
-### 📊 **User Management Features**
-- **Admin panel at `/admin` for viewing all registered users**
-- **CSV export functionality for user data**
-- **Real-time user statistics and registration tracking**
-- **Secure password validation and duplicate prevention**
-
-### 🛠️ **Technical Enhancements**
-- **TypeScript interfaces for user data management**
-- **React hooks for state management and authentication**
-- **Next.js App Router for dynamic page routing**
-- **Tailwind CSS for consistent styling**
-- **Error handling and user feedback systems**
-
-### 📱 **Mobile App Development**
-- **React Native with Expo SDK 53.0.20**
-- **Cross-platform support (iOS, Android, Web)**
-- **Material Design with React Native Paper**
-- **Navigation with React Navigation**
-- **TypeScript for type safety**
+<!-- TODO: add docker -->
+<!-- ## 🚀 **Deployment Options** -->
 
 ## 🔧 **Development Guidelines**
 
@@ -509,52 +434,11 @@ kubectl apply -f k8s/
 - **TypeScript**: Follow Airbnb style guide, use Prettier
 - **Commits**: Use conventional commit format
 
-### Branch Strategy
-- `main` - Production-ready code
-- `develop` - Integration branch
-- `feature/*` - New features
-- `bugfix/*` - Bug fixes
-- `hotfix/*` - Urgent fixes
-
 ### Testing Strategy
 - **Unit Tests**: Test individual components
 - **Integration Tests**: Test API endpoints
 - **E2E Tests**: Test complete user workflows
 - **Performance Tests**: Load testing for production readiness
-
-## 🤝 **Contributing**
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Make your changes and add tests
-4. Run the test suite (`python -m pytest tests/`)
-5. Commit your changes (`git commit -m 'feat: add amazing feature'`)
-6. Push to the branch (`git push origin feature/amazing-feature`)
-7. Open a Pull Request
-
-### Development Setup for Contributors
-```bash
-# Install pre-commit hooks
-pip install pre-commit
-pre-commit install
-
-# Install development dependencies
-pip install -r requirements-dev.txt
-```
-
-## 📊 **Performance Metrics**
-
-### Current Performance
-- **API Response Time**: < 200ms for basic endpoints
-- **Search Response Time**: < 2s for ArXiv queries
-- **Frontend Load Time**: < 1s for initial page load
-- **Database Health**: 99.9% uptime for ArXiv connector
-
-### Scalability Features
-- **Async Processing**: FastAPI async/await for concurrent requests
-- **Caching**: Redis-based caching for frequent queries
-- **Connection Pooling**: Database connection optimization
-- **CDN Ready**: Static assets optimized for CDN delivery
 
 ## 🚀 **How to Use the New Features**
 
@@ -571,12 +455,6 @@ pip install -r requirements-dev.txt
 2. **View all users**: See a table of all registered users
 3. **Export data**: Click "Export to CSV" to download user data as Excel file
 4. **Monitor registrations**: Track total user count and new registrations
-
-### 🎨 **UI Features**
-- **Responsive design**: Works on desktop, tablet, and mobile
-- **Professional branding**: AUC logo and consistent styling
-- **Form validation**: Real-time error messages and success feedback
-- **Loading states**: Professional animations during form submission
 
 ### 📱 **Mobile App Usage**
 1. **Install Expo Go** on your mobile device
