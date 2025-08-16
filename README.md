@@ -63,84 +63,118 @@ The research assistant system operates through the following sequential steps:
 
 ## 📁 **Project Structure**
 
-<!-- TODO: fix -->
 ```
-AUC-Research-Assistant/
-├── backend/                    # FastAPI backend application
-│   ├── app/
-│   │   ├── api/v1/            # API endpoints and routing
-│   │   │   └── endpoints/
-│   │   │       └── query.py   # Search query endpoints
-│   │   ├── core/              # Configuration and logging
-│   │   │   ├── config.py      # Application settings
-│   │   │   └── logging.py     # Logging configuration
-│   │   ├── schemas/           # Pydantic data models
-│   │   │   └── search.py      # Search-related schemas
-│   │   └── services/          # Business logic and external integrations
-│   │       ├── database_connectors/
-│   │       │   ├── arxiv_connector.py      # ArXiv API integration
-│   │       │   ├── semantic_scholar_connector.py  # Semantic Scholar API
-│   │       │   └── base.py    # Base connector class
-│   │       ├── embedding_client.py         # Vector embeddings service
-│   │       ├── federated_search_service.py # Main search orchestration
-│   │       ├── llm_client.py  # OpenAI/LangChain integration
-│   │       └── cohere_reranker.py # Result reranking service
-│   ├── tests/                 # Test suites
-│   ├── main.py               # Application entry point
-│   ├── requirements.txt      # Python dependencies (73 packages)
-│   └── TESTING_REPORT.md     # Detailed testing documentation
-├── frontend/                  # Next.js frontend application
-│   ├── src/
-│   │   ├── app/              # Next.js App Router pages
-│   │   │   ├── login/        # User login page
-│   │   │   ├── signup/       # User registration page
-│   │   │   ├── admin/        # Admin panel for user management
-│   │   │   ├── layout.tsx    # Root layout with header
-│   │   │   ├── page.tsx      # Main application page
-│   │   │   └── globals.css   # Global styles
-│   │   ├── components/       # React components
-│   │   │   ├── Header.tsx    # Navigation header with AUC branding
-│   │   │   ├── Search.tsx    # Main search interface
-│   │   │   ├── SearchResults.tsx # Results display component
-│   │   │   ├── CitationPreview.tsx # Citation management
-│   │   │   ├── DatabaseStatus.tsx # Real-time database health
-│   │   │   ├── ResearchAnalysis.tsx # Analysis dashboard
-│   │   │   ├── ConversationalAssistant.tsx # AI chat interface
-│   │   │   └── ui/           # Reusable UI components
-│   │   ├── lib/             # Utility functions and services
-│   │   │   ├── auth.ts      # Authentication utilities
-│   │   │   └── utils.ts     # General utilities
-│   │   └── types/           # TypeScript type definitions
-│   │       └── search.ts    # Search-related types
-│   ├── public/              # Static assets (AUC logos)
-│   ├── package.json         # Node.js dependencies (25 packages)
-│   └── next.config.ts       # Next.js configuration
-├── ResearchAssistantMobile/  # React Native mobile application
-│   ├── src/
-│   │   ├── components/       # Reusable UI components
-│   │   │   └── CitationPreview.tsx # Mobile citation component
-│   │   ├── screens/         # Screen components
-│   │   │   ├── HomeScreen.tsx # Main search screen
-│   │   │   ├── LoginScreen.tsx # Mobile login interface
-│   │   │   └── SignupScreen.tsx # Mobile registration
-│   │   ├── services/        # API and business logic
-│   │   │   └── api.ts       # Mobile API client
-│   │   ├── types/           # TypeScript type definitions
-│   │   │   └── search.ts    # Search types for mobile
-│   │   └── utils/           # Mobile utilities
-│   │       ├── clipboard.ts # Clipboard functionality
-│   │       ├── platformConstantsPolyfill.js # Platform polyfills
-│   │       └── turboModulePolyfill.js # TurboModule support
-│   ├── App.tsx              # Main app component
-│   ├── package.json         # Dependencies (20 packages)
-│   └── app.json             # Expo configuration
-├── docker/                   # Docker configuration files
-│   └── docker-compose.yml   # Multi-service container setup
-├── docs/                    # Project documentation
-│   └── ARCHITECTURE.md      # Architecture decision records
-├── scripts/                 # Development and deployment scripts
-│   └── setup.py            # Project setup automation
-└── README.md               # This comprehensive documentation
+backend
+├── app
+│   ├── api
+│   │   └── v1
+│   │       ├── endpoints
+│   │       │   ├── chat_completions.py # OpenAI-compatible chat completions API endpoint
+│   │       │   └── query.py            # Old API endpoint w/o support for multi-message conversations
+│   │       └── router.py               # Binds API endpoints to one object
+│   ├── core
+│   │   ├── config.py                   # Where configuration options are programmed
+│   │   └── logging.py                  # Backend logging logic
+│   ├── schemas
+│   │   └── search.py                   # Types used throughout the backend
+│   └── services
+│       ├── cohere_reranker.py          # Cohere reranking service
+│       ├── database_connectors
+│       │   ├── arxiv_connector.py      # Connector providing access to arXiv
+│       │   ├── base.py                 # Abstract class for connectors
+│       │   ├── searxng.py              # Connector providing access to SearxNG
+│       │   └── semantic_scholar_connector.py # Connector providing access to Semantic Scholar
+│       ├── embedding_client.py         # Service providing embedding capabilities to the project
+│       ├── federated_search_service.py # Binds all database connectors into one search service
+│       ├── llm_client.py               # Provides access to an LLM
+│       └── rate_limiter.py             # Rate limiting logic for database connectors
+├── clear_vector_db.py                  # Script to clear ChromaDB
+├── devenv.lock                         # DevEnv lock file
+├── devenv.nix                          # DevEnv configuration file
+├── env.example                         # Example environment file
+├── main.py                             # Main backend entry point
+├── pyproject.toml                      # Backend dependency management and project description
+├── test_api_endpoints.py               # Test file
+├── test_components.py                  # Test file
+├── test_database_connectors.py         # Test file
+├── test_server.py                      # Test file
+├── TESTING_REPORT.md
+├── tests
+│   ├── test_main.py                    # Test file
+│   └── test_search.py                  # Test file
+└── uv.lock                             # Lock file for dependencies for pyproject.toml
+docs
+└── ARCHITECTURE.md                     # Detailed architecture
+frontend
+├── components.json                     # Components to be imported
+├── devenv.lock
+├── devenv.nix
+├── eslint.config.mjs                   # ESlint configuration
+├── package-lock.json                   # Package dependencies lock file
+├── package.json                        # Package description and dependencies
+├── public
+│   ├── auc_logo.png                    # AUC logo
+│   └── auc_logo2.png
+├── src
+│   ├── app
+│   │   ├── admin
+│   │   │   └── page.tsx                # Admin page
+│   │   ├── chat
+│   │   │   └── [id]
+│   │   │       └── page.tsx            # Page for chats with messages and filters
+│   │   ├── globals.css                 # Global CSS
+│   │   ├── layout.tsx                  # Wrapper for NEXT.js files in the directory
+│   │   ├── login
+│   │   │   └── page.tsx                # Login page
+│   │   ├── page.css                    # CSS for main page
+│   │   ├── page.tsx                    # Main page tsx file
+│   │   └── signup
+│   │       └── page.tsx                # Sign up page
+│   ├── components
+│   │   ├── Search.css                  # CSS for Search.tsx
+│   │   ├── Search.tsx                  # Main Search components
+│   │   └── ui                          # UI components imported from Shadcn
+│   │       ├── badge.tsx
+│   │       ├── button.tsx
+│   │       ├── card.tsx
+│   │       ├── input.tsx
+│   │       ├── progress.tsx
+│   │       ├── separator.tsx
+│   │       ├── tabs.tsx
+│   │       └── textarea.tsx
+│   ├── lib
+│   │   ├── auth.ts                     # Authentication logic
+│   │   ├── chatStore.ts                # localStorage logic for chats
+│   │   ├── docStore.ts                 # localStorage logic for documents
+│   │   └── utils.ts                    # Utilities
+│   └── types
+│       └── search.ts                   # Types
+└── tsconfig.json                       # TypeScript configuration
+LICENSE
+README.md                               # This file you are reading :)
+ResearchAssistantMobile
+├── app.json                            # App description and options
+├── App.tsx                             # Main app page
+├── assets                              # Images used in the app
+├── index.ts                            # Wrapper for app
+├── package-lock.json                   # Package dependencies lock file
+├── package.json                        # Package description and dependencies
+├── src
+│   ├── components
+│   │   ├── CitationPreview.tsx         # Citaion preview component
+│   │   └── ConversationalChat.tsx      # conversation chat components
+│   ├── screens
+│   │   ├── HomeScreen.tsx              # Home screen page
+│   │   ├── LoginScreen.tsx             # Login screen page
+│   │   └── SignupScreen.tsx            # Signup screen page
+│   ├── services
+│   │   └── api.ts                      # API connector to backend
+│   ├── types
+│   │   └── search.ts                   # Common types
+│   └── utils                           # Utilities
+└── tsconfig.json                       # TypeScript configuration
+scripts
+└── setup.py                            # Project setup script
 ```
 
 ## 🚀 **Quick Start Guide**
