@@ -1,20 +1,11 @@
+<!-- TODO: add docker support to project and this file -->
+<!-- TODO: add information about CodeQL -->
+<!-- TODO: add information about LangChain -->
 # AUC Research Assistant
 
 An AI-powered research assistant platform that helps researchers discover, analyze, and synthesize academic papers and research materials with federated search across academic databases.
 
 ## 🚀 **Project Status: Production Ready**
-
-- ✅ **Core Backend**: FastAPI with comprehensive API endpoints and database connectors
-- ✅ **Frontend**: Modern Next.js 15 application with TypeScript and Tailwind CSS v4
-- ✅ **Mobile App**: React Native with Expo SDK for cross-platform support
-- ✅ **Database Integration**: ArXiv connector fully functional with real-time search
-- ✅ **AI/ML Components**: LLM integration, embeddings, and semantic search capabilities
-- ✅ **Authentication System**: Complete user registration, login, and session management
-- ✅ **UI/UX Enhancements**: Professional header with AUC branding and responsive design
-- ✅ **User Management**: Admin panel for viewing and exporting user data
-- ✅ **Testing**: Comprehensive test suite with 83% core functionality working
-- ✅ **Docker Support**: Complete containerization setup with PostgreSQL and Redis
-- 🎯 **Ready for Production Deployment**
 
 ## 🏗️ **Architecture Overview**
 
@@ -45,9 +36,9 @@ The research assistant system operates through the following sequential steps:
 ### Backend (Python/FastAPI)
 - **Framework**: FastAPI 0.104.1 with async/await support
 - **Validation**: Pydantic v2.5.0 for robust data validation
-- **Database**: SQLAlchemy 2.0.23 with PostgreSQL support
-- **AI/ML**: OpenAI API, Sentence Transformers 2.2.2, ChromaDB 0.4.18
-- **Academic APIs**: ArXiv 1.4.8, BioPython 1.82, PyAlex 0.13
+- **Database**: ChromaDB as vector database for storing embeddings and processing them
+- **AI/ML**: OpenAI API, Mistral AI, Ollama, Sentence Transformers
+- **Academic APIs**: ArXiv, Semantic Scholar, SearxNG providing access to multiple databases like PubMed and Google Scholar
 - **Testing**: Pytest 7.4.3 with comprehensive test coverage
 - **Documentation**: Automatic OpenAPI/Swagger generation
 
@@ -70,15 +61,9 @@ The research assistant system operates through the following sequential steps:
 - **Development**: Expo CLI for rapid development
 - **Styling**: React Native Paper theming system
 
-### Infrastructure
-- **Containerization**: Docker Compose with PostgreSQL 15 and Redis 7
-- **Caching**: Redis for session management and caching
-- **Database**: PostgreSQL for persistent data storage
-- **Vector Database**: ChromaDB for semantic search
-- **Task Queue**: Celery 5.3.4 for background processing
-
 ## 📁 **Project Structure**
 
+<!-- TODO: fix -->
 ```
 AUC-Research-Assistant/
 ├── backend/                    # FastAPI backend application
@@ -172,11 +157,11 @@ AUC-Research-Assistant/
 - **Xcode** (for iOS development, macOS only)
 - **Expo Go app** (for testing on physical devices)
 
-### Option 1: Development Setup (Recommended)
+### Development Setup
 
 #### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/AUC-Research-Assistant.git
+git clone https://github.com/kirollos21/AUC-Research-Assistant/
 cd AUC-Research-Assistant
 ```
 
@@ -248,20 +233,6 @@ npm run web        # For web browser
 - **Backend API**: http://localhost:8000
 - **API Documentation**: http://localhost:8000/docs
 - **Mobile App**: Expo Go app or web browser
-
-### Option 2: Docker Deployment (Production Ready)
-
-#### 1. Start All Services
-```bash
-# From project root
-cd docker
-docker-compose up -d
-```
-
-#### 2. Access Services
-- **PostgreSQL**: localhost:5432
-- **Redis**: localhost:6379
-- **pgAdmin**: http://localhost:5050 (admin@auc.edu / admin)
 
 ## 🔧 **Environment Variables**
 
@@ -351,11 +322,10 @@ npm run build
 ## 🔍 **Key Features**
 
 ### 🔍 **Federated Search**
-- **Multi-Database Search**: Search across ArXiv, PubMed, CrossRef, and DOAJ
+- **Multi-Database Search**: Search across ArXiv, SemanticScholar, Google Scholar, PubMed
 - **Query Expansion**: AI-powered query enhancement for better results
 - **Semantic Search**: Vector-based similarity search using embeddings
 - **Result Deduplication**: Intelligent removal of duplicate papers
-- **Advanced Filtering**: Filter by database, date range, access type
 
 ### 📊 **Research Analysis**
 - **Key Concepts Extraction**: Identify main themes and research areas
@@ -644,27 +614,6 @@ docker-compose logs
 docker-compose down -v
 docker-compose up -d
 ```
-
-## 📈 **Roadmap**
-
-### Phase 1: Core Features (✅ Complete)
-- [x] Basic search functionality
-- [x] User authentication system
-- [x] Admin panel
-- [x] Mobile app foundation
-- [x] Docker deployment
-
-### Phase 2: Advanced Features (🔄 In Progress)
-- [ ] Additional database connectors (PubMed, CrossRef, DOAJ)
-- [ ] Advanced AI analysis features
-- [ ] Real-time collaboration tools
-- [ ] Advanced mobile features
-
-### Phase 3: Enterprise Features (📋 Planned)
-- [ ] Multi-tenant architecture
-- [ ] Advanced analytics dashboard
-- [ ] API rate limiting and monitoring
-- [ ] Advanced security features
 
 ## 👥 **Team**
 
