@@ -275,19 +275,12 @@ npm run web        # For web browser
 # Application Settings
 APP_NAME=AUC Research Assistant
 APP_VERSION=1.0.0
-ENVIRONMENT=development
 DEBUG=true
 
 # Server Configuration
 HOST=0.0.0.0
 PORT=8000
-LOG_LEVEL=INFO
-
-# Database Configuration
-DATABASE_URL=postgresql://postgres:postgres@localhost:5432/auc_research_db
-
-# Redis Configuration
-REDIS_URL=redis://localhost:6379
+LOG_LEVEL=DEBUG
 
 # OpenAI Configuration
 OPENAI_API_KEY=your_openai_api_key_here
