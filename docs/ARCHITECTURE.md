@@ -1,3 +1,5 @@
+<!-- TODO: Maybe add more technical decisions -->
+<!-- TODO: Why is this in /docs/ while the rest of md files are in /? -->
 # Architecture Decision Record (ADR)
 
 ## Backend Technology Stack Decision
@@ -61,45 +63,40 @@ We needed to choose a backend technology stack for the AUC Research Assistant th
 
 ### System Architecture
 
-```
-┌─────────────────┐    HTTP/REST     ┌─────────────────┐
-│                 │ ◄──────────────► │                 │
-│   Next.js       │                  │   FastAPI       │
-│   Frontend      │                  │   Backend       │
-│                 │                  │                 │
-└─────────────────┘                  └─────────────────┘
-                                              │
-                                              ▼
-                    ┌─────────────────┐─────────────────┐
-                    │                 │                 │
-                    │   PostgreSQL    │   Vector DB     │
-                    │   Database      │   (ChromaDB)    │
-                    │                 │                 │
-                    └─────────────────┘─────────────────┘
-```
+![architecture diagram image](../images/auc-library-diagram.excalidraw.png)
+
+#### System Architecture Workflow
+
+The research assistant system operates through the following sequential steps:
+
+**Step 1-2:** Users interact with the system through either a web application (NextJS 15 + Tailwind + TypeScript) or mobile application (React Native ExpoSDK), which communicate with the backend server.
+
+**Step 3:** The backend server (Python 3.10+ with FastAPI and Pydantic v2) processes user queries and generates targeted search queries for different academic databases using large language models.
+
+**Step 4:** The system performs federated searches across multiple academic databases including arXiv, Semantic Scholar, and SearXNG (which provides access to Google Scholar results) to retrieve relevant research documents.
+
+**Step 5:** Retrieved documents are processed through an embedding client that utilizes either Mistral AI or Hugging Face models (depending on configuration) for local text embedding generation, creating vector representations of the academic content.
+
+**Step 6:** Document embeddings are stored in a Chroma vector database for efficient similarity-based retrieval. Chroma then performs similarity search against the stored documents to identify the most relevant documents for the user's query.
+
+**Step 7:** A subset of the most relevant documents undergoes reranking using Cohere's reranking service to optimize document relevance ordering.
+
+**Step 8:** The reranked documents are passed to the LLM service (supporting OpenAI-compatible providers, Mistral, and Ollama) as context for response generation.
+
+**Step 9-10:** The LLM generates a comprehensive, contextualized response that is streamed back to the user through the frontend applications, completing the research assistance workflow.
 
 ### Implementation Details
 
 #### Backend (Python/FastAPI)
 - **Framework**: FastAPI for API development
-- **Database**: PostgreSQL with SQLAlchemy ORM
 - **Vector Storage**: ChromaDB for embeddings
 - **Authentication**: JWT-based with python-jose
-- **AI Integration**: OpenAI API, LangChain for orchestration
-- **Document Processing**: PyPDF2, python-docx, unstructured
-- **Task Queue**: Celery with Redis for background processing
+- **AI Integration**: OpenAI API, Mistral AI, Ollama; LangChain for orchestration
 
 #### Frontend (Next.js)
 - **Framework**: Next.js 14 with App Router
 - **Language**: TypeScript for type safety
 - **Styling**: Tailwind CSS for rapid UI development
-- **State Management**: React Query for server state, Zustand for client state
-- **Authentication**: NextAuth.js with JWT backend integration
-
-#### Database Design
-- **Primary DB**: PostgreSQL for relational data
-- **Vector DB**: ChromaDB for document embeddings and similarity search
-- **Cache**: Redis for session storage and task queuing
 
 ### Consequences
 
@@ -118,4 +115,4 @@ We needed to choose a backend technology stack for the AUC Research Assistant th
 ### Future Considerations
 - Consider GraphQL if API complexity grows significantly
 - Evaluate microservices architecture if AI processing becomes compute-intensive
-- Monitor performance and consider adding caching layers as needed 
+- Monitor performance and consider adding caching layers as needed
