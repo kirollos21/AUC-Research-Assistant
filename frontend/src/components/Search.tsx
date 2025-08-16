@@ -137,7 +137,7 @@ useEffect(() => {
 
 
   const MAX_DOCS = 10;
-  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || "http://127.0.0.1:8000/v1/chat/completions";
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/v1/chat/completions" || "http://127.0.0.1:8000/v1/chat/completions";
 
 // namespaced localStorage keys (per chat)
 const scope = chatId ?? "home";
