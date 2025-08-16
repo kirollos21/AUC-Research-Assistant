@@ -6,7 +6,7 @@ WORKDIR /app
 COPY . .
 
 # Install dependencies and build
-RUN npm install && npm run build
+RUN npm install
 
 # Start the Next.js production server
-CMD ["node", ".next/standalone/server.js"]
+CMD ["npm", "run", "dev"]
