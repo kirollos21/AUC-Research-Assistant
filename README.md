@@ -18,21 +18,27 @@ An AI-powered research assistant platform that helps researchers discover, analy
 
 ## 🏗️ **Architecture Overview**
 
-```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Frontend      │    │   Backend       │    │   Databases     │
-│   (Next.js 15)  │◄──►│   (FastAPI)     │◄──►│   (ArXiv, etc.) │
-│   TypeScript    │    │   Python 3.10+  │    │   PostgreSQL    │
-│   Tailwind CSS  │    │   Pydantic v2   │    │   Redis         │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         │                       │                       │
-         ▼                       ▼                       ▼
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Mobile App    │    │   AI/ML         │    │   Vector DB     │
-│   (React Native)│    │   Services      │    │   (ChromaDB)    │
-│   Expo SDK      │    │   (OpenAI, etc.)│    │   Embeddings    │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-```
+![architecture diagram image](./images/auc-library-diagram.excalidraw.png)
+
+### System Architecture Workflow
+
+The research assistant system operates through the following sequential steps:
+
+**Step 1-2:** Users interact with the system through either a web application (NextJS 15 + Tailwind + TypeScript) or mobile application (React Native ExpoSDK), which communicate with the backend server.
+
+**Step 3:** The backend server (Python 3.10+ with FastAPI and Pydantic v2) processes user queries and generates targeted search queries for different academic databases using large language models.
+
+**Step 4:** The system performs federated searches across multiple academic databases including arXiv, Semantic Scholar, and SearXNG (which provides access to Google Scholar results) to retrieve relevant research documents.
+
+**Step 5:** Retrieved documents are processed through an embedding client that utilizes either Mistral AI or Hugging Face models (depending on configuration) for local text embedding generation, creating vector representations of the academic content.
+
+**Step 6:** Document embeddings are stored in a Chroma vector database for efficient similarity-based retrieval. Chroma then performs similarity search against the stored documents to identify the most relevant documents for the user's query.
+
+**Step 7:** A subset of the most relevant documents undergoes reranking using Cohere's reranking service to optimize document relevance ordering.
+
+**Step 8:** The reranked documents are passed to the LLM service (supporting OpenAI-compatible providers, Mistral, and Ollama) as context for response generation.
+
+**Step 9-10:** The LLM generates a comprehensive, contextualized response that is streamed back to the user through the frontend applications, completing the research assistance workflow.
 
 ## 🛠️ **Technology Stack**
 
