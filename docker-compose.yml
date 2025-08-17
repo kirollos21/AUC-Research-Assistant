@@ -34,7 +34,7 @@ services:
     ports:
       - "${WEB_PORT:-3000}:3000"
     environment:
-      - NEXT_PUBLIC_API_BASE_URL=http://${HOST_ADDRESS:-127.0.0.1}:8000
+      - NEXT_PUBLIC_API_BASE_URL=${HOST_ADDRESS:-http://127.0.0.1}:8000
       - NODE_ENV=production
     depends_on:
       backend:
