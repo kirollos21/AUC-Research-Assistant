@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from 'next/link';
@@ -34,21 +33,21 @@ export default function SignupPage() {
     setIsLoading(true);
     setError('');
     setSuccess('');
-    
+
     // Validate passwords match
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       setIsLoading(false);
       return;
     }
-    
+
     // Validate password length
     if (formData.password.length < 6) {
       setError('Password must be at least 6 characters long');
       setIsLoading(false);
       return;
     }
-    
+
     try {
       const userData = {
         firstName: formData.firstName,
@@ -56,9 +55,9 @@ export default function SignupPage() {
         email: formData.email,
         password: formData.password
       };
-      
+
       const success = saveUser(userData);
-      
+
       if (success) {
         setSuccess('Account created successfully! Redirecting to login...');
         setTimeout(() => {
@@ -68,7 +67,7 @@ export default function SignupPage() {
         setError('User with this email already exists');
       }
     } catch (err) {
-      setError('An error occurred while creating your account');
+      setError('An error occurred while creating your account' + err);
     } finally {
       setIsLoading(false);
     }
@@ -79,9 +78,9 @@ export default function SignupPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Link href="/" className="inline-block">
-            <img 
-              src="/auc_logo2.png" 
-              alt="AUC Research Assistant Logo" 
+            <img
+              src="/auc_logo2.png"
+              alt="AUC Research Assistant Logo"
               className="h-22 w-auto mx-auto mb-8"
             />
           </Link>
@@ -256,4 +255,4 @@ export default function SignupPage() {
       </div>
     </div>
   );
-} 
+}

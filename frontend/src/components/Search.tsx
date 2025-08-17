@@ -19,7 +19,6 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Separator } from "@/components/ui/separator";
@@ -27,7 +26,6 @@ import {
   Search as SearchIcon,
   Loader2,
   ExternalLink,
-  Star,
   Moon,
   Sun,
 } from "lucide-react";
@@ -54,7 +52,6 @@ export default function Search({
   chatId?: string | null;
 }) {
 // ─── page-level state ────────────────────────────────────────────
-const [query,         setQuery]         = useState("");
 const [response,      setResponse]      = useState("");
 const [status,        setStatus]        = useState("");
 const [error,         setError]         = useState("");
@@ -78,7 +75,6 @@ const router = useRouter();
 //const [autoApply, setAutoApply] = useState(true);         // auto-run filters
 const hasUserAsked = messages.some(m => m.role === "user"); // did we ask anything yet?
 const lastQueryRef = useRef<string>("");
-const filterKey = `filters:${chatId ?? "home"}`;
 const [isApplying, setIsApplying] = useState(false);
 const [sidebarOpen, setSidebarOpen] = useState(true);
 // ────────────────────────────────────────────────────────────────
@@ -141,7 +137,7 @@ useEffect(() => {
 
 
   const MAX_DOCS = 10;
-  const API_BASE_URL = "http://127.0.0.1:8000/v1/chat/completions";
+  const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL + "/v1/chat/completions" || "http://127.0.0.1:8000/v1/chat/completions";
 
 // namespaced localStorage keys (per chat)
 const scope = chatId ?? "home";
@@ -225,7 +221,7 @@ useEffect(() => {
 
   const toggleTheme = () => setIsDarkMode((v) => !v);
 
-  const handleSend = async (forcedPrompt?: string) => {
+  const handleSend = async (_forcedPrompt?: string) => {
   const text = composer.trim();
   if (!text) return;
   lastQueryRef.current = text;

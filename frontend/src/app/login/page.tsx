@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from 'react';
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import Link from 'next/link';
@@ -19,10 +18,10 @@ export default function LoginPage() {
     e.preventDefault();
     setIsLoading(true);
     setError('');
-    
+
     try {
       const user = authenticateUser(email, password);
-      
+
       if (user) {
         loginUser(user);
         router.push('/');
@@ -30,7 +29,7 @@ export default function LoginPage() {
         setError('Invalid email or password');
       }
     } catch (err) {
-      setError('An error occurred during login');
+      setError('An error occurred during login' + err);
     } finally {
       setIsLoading(false);
     }
@@ -151,7 +150,7 @@ export default function LoginPage() {
 
             <div className="mt-6 text-center">
               <p className="text-sm text-gray-600">
-                Don't have an account?{' '}
+                Don't have an account?
                 <Link href="/signup" className="font-medium text-blue-600 hover:text-blue-500">
                   Sign up here
                 </Link>
@@ -162,4 +161,4 @@ export default function LoginPage() {
       </div>
     </div>
   );
-} 
+}

@@ -1,7 +1,7 @@
 export type Chat = {
   id: string;
   title: string;
-  messages: { role: "user" | "assistant"; content: string }[];
+  messages: { role: "user" | "assistant" | "system"; content: string }[];
   documents?: any[];          // ← add
 };
 
