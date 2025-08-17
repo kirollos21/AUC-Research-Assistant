@@ -1,5 +1,4 @@
 <!-- TODO: add information about CodeQL -->
-<!-- TODO: add information about LangChain -->
 # AUC Research Assistant
 
 An AI-powered research assistant platform that helps researchers discover, analyze, and synthesize academic papers and research materials with federated search across academic databases.
@@ -36,7 +35,7 @@ The research assistant system operates through the following sequential steps:
 - **Framework**: FastAPI 0.104.1 with async/await support
 - **Validation**: Pydantic v2.5.0 for robust data validation
 - **Database**: ChromaDB as vector database for storing embeddings and processing them
-- **AI/ML**: OpenAI API, Mistral AI, Ollama, Sentence Transformers
+- **AI/ML**: OpenAI API, Mistral AI, Ollama, Sentence Transformers, LangChain for integrating everything together
 - **Academic APIs**: ArXiv, Semantic Scholar, SearxNG providing access to multiple databases like PubMed and Google Scholar
 - **Testing**: Pytest 7.4.3 with comprehensive test coverage
 - **Documentation**: Automatic OpenAPI/Swagger generation
