@@ -1,7 +1,5 @@
-<!-- TODO: add docker support to project and this file -->
 <!-- TODO: add information about CodeQL -->
 <!-- TODO: add information about LangChain -->
-<!-- TODO: Split some sections into separate files -->
 # AUC Research Assistant
 
 An AI-powered research assistant platform that helps researchers discover, analyze, and synthesize academic papers and research materials with federated search across academic databases.
@@ -63,7 +61,7 @@ The research assistant system operates through the following sequential steps:
 - **Styling**: React Native Paper theming system
 
 ## 📁 **Project Structure**
-
+<!-- TODO: update as structure updates -->
 ```
 backend
 ├── app
@@ -103,7 +101,8 @@ backend
 ├── tests
 │   ├── test_main.py                    # Test file
 │   └── test_search.py                  # Test file
-└── uv.lock                             # Lock file for dependencies for pyproject.toml
+├── uv.lock                             # Lock file for dependencies for pyproject.toml
+└── Dockerfile                          # Dockerfile for the backend
 docs
 └── ARCHITECTURE.md                     # Detailed architecture
 frontend
@@ -150,9 +149,13 @@ frontend
 │   │   └── utils.ts                    # Utilities
 │   └── types
 │       └── search.ts                   # Types
-└── tsconfig.json                       # TypeScript configuration
+├── tsconfig.json                       # TypeScript configuration
+└── Dockerfile                          # Dockerfile for the frontend
 LICENSE
 README.md                               # This file you are reading :)
+TROUBLESHOOTING.md                      # Guide on solving some common problems
+DEVELOPMENT.md                          # Development guidelines for developers
+docker-compose.yml                      # Docker compose file for binding frontend and backend together
 ResearchAssistantMobile
 ├── app.json                            # App description and options
 ├── App.tsx                             # Main app page
@@ -425,8 +428,22 @@ npm run build
 - **Google Scholar**: ✅ Through SearxNG
 - **CrossRef**: ✅ Through SearxNG
 
-<!-- ## 🚀 **Deployment Options** -->
-<!-- TODO: add docker -->
+## 🚀 **Deployment Options**
+### Local Deployment
+On any computer, follow the instructions described above to setup the backend and frontend.
+
+### Docker Compose
+First, set up the CORS correctly in the backend by modifying the .env file. Make sure in the CORS allowed addresses that your frontend address is included.
+After doing that, do the following:
+```sh
+# Optional: to change the frontend port if 3000 is used by some other service
+export WEB_PORT=3332
+# This option tells the frontend what the backend's address is. Note that the backend must be configured to accept connections on this address.
+# Make sure to set to HTTP or HTTPS depending on type of connection. Also, make sure there is no trailing / at the end.
+export HOST_ADDRESS=http://127.0.0.1:8000
+
+docker compose up
+```
 
 ## 👥 **Team**
 
